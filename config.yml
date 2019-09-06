@@ -1,0 +1,40 @@
+##########################################################
+#                    PaperMoney Config                   #
+##########################################################
+Prefix: "&b(&lPaperMoney&r&b)&r"
+
+Min_Amount: 1
+#This is used to players can't make paper money worth $0 and duplicate paper.
+
+Use_Holograms_If_Possible: true
+#Self explanatory
+
+Sound: "NONE"
+#Sounds can be found at 
+#https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+#Caps matter
+
+Item_Name: "&a$&6%pm_bill_worth%"
+
+Item_Lore:
+  - "%pm_IDENTIFIER%"
+#^^^ Don't touch this or put this somewhere else in the lore.
+  - "&rA PaperMoney note."
+
+#Syntax
+# %pm_bill_worth% --> The amount that a bill is worth
+# %pm_player_money% --> Player's money
+# %pm_player_name% --> Player's name
+
+##########################################################
+#                       Permission                       #
+##########################################################
+
+# papermoney.make
+#Allows players to run the /pmoney make command.
+
+# papermoney.take
+#Allows players to run the /pmoney take command.
+
+# papermoney.take.others
+#Allows players to run the /pmoney take (playerName) command.

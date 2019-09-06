@@ -1,4 +1,12 @@
-name: PaperMoney
-main: me.TheTealViper.PaperMoney.PaperMoney
-version: 1.14.4.a.1
+name: "PaperMoney"
+author: TheTealViper
+version: "1.14.4.a.1"
 api-version: 1.13
+description: "Physical money"
+main: me.TheTealViper.papermoney.main
+depend: [Vault]
+softdepend: [HolographicDisplays]
+commands:
+  papermoney:
+    description: "Main command"
+    aliases: [pmoney]
