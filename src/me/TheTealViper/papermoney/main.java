@@ -292,7 +292,7 @@ public class main extends JavaPlugin implements Listener{
                             }
                             withoutKnowledges = withoutKnowledges.substring(0, foundIt + 1);
                         }
-                        worth = Double.valueOf(withoutKnowledges);
+                        worth = Double.valueOf(withoutKnowledges.replace("§", ""));
                     }
                 }
                 if(isReal){
