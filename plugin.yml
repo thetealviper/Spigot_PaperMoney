@@ -1,6 +1,6 @@
 name: "PaperMoney"
 author: TheTealViper
-version: "1.14.4.a.2"
+version: "1.14.4.a.3"
 api-version: 1.13
 description: "Physical money"
 main: me.TheTealViper.papermoney.main

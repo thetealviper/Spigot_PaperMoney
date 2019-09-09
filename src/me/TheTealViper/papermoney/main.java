@@ -271,10 +271,11 @@ public class main extends JavaPlugin implements Listener{
     @EventHandler
     public void onClick(PlayerInteractEvent e){
         if(e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
-            if(e.getItem() == null || e.getItem().getType().equals(Material.AIR))
+        	ItemStack item = e.getPlayer().getInventory().getItemInMainHand();
+            if(item == null || item.getType().equals(Material.AIR))
                 return;
-            if(e.getItem().hasItemMeta() && e.getItem().getItemMeta().hasLore() && e.getItem().getItemMeta().hasDisplayName()){
-                List<String> lore = e.getItem().getItemMeta().getLore();
+            if(item.hasItemMeta() && item.getItemMeta().hasLore() && item.getItemMeta().hasDisplayName()){
+                List<String> lore = item.getItemMeta().getLore();
                 boolean isReal = false;
                 double worth = 0;
                 for(String s : lore){
