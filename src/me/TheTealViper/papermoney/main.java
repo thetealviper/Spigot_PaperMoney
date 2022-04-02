@@ -1,48 +1,80 @@
 package me.TheTealViper.papermoney;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.ItemMergeEvent;
+import org.bukkit.event.inventory.InventoryInteractEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.java.JavaPlugin;
 
+import me.TheTealViper.papermoney.util.PluginFile;
+import me.TheTealViper.papermoney.util.UtilityEquippedJavaPlugin;
 import net.milkbowl.vault.economy.Economy;
  
-@SuppressWarnings("deprecation")
-public class main extends JavaPlugin implements Listener{
+public class main extends UtilityEquippedJavaPlugin implements Listener{
     public String prefix;
     public String help;
     public Economy econ;
     List<UUID> tracking = new ArrayList<UUID>();
     Map<UUID, Double> amountMap = new HashMap<UUID, Double>();
     Map<UUID, Integer> itemScheduleDatabase = new HashMap<UUID, Integer>();
+    PluginFile MESSAGES;
  
     public void onEnable(){
+    	StartupPlugin(this, "42464");
+    	
+    	if(!new File("plugins/PaperMoney/messages.yml").exists()) {
+			try {
+				InputStream inStream = getResource("messages.yml");
+				File targetFile = new File("plugins/PaperMoney/messages.yml");
+			    OutputStream outStream = new FileOutputStream(targetFile);
+			    byte[] buffer = new byte[inStream.available()];
+			    inStream.read(buffer);
+			    outStream.write(buffer);
+			    outStream.close();
+			    inStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		MESSAGES = new PluginFile(this, "messages.yml");
+    	
     	holographShit.plugin = this;
-        getLogger().info("PaperMoney from TheTealViper enabling!");
-        Bukkit.getPluginManager().registerEvents(this, this);
-        saveDefaultConfig();
-        prefix = makeColors(getConfig().getString("Prefix")) + " ";
-        help = ChatColor.RESET + "" + ChatColor.GRAY;
+        prefix = makeColors(MESSAGES.getString("Prefix")) + " ";
+        help = makeColors(MESSAGES.getString("Help")) + " ";
         if(!setupEconomy()){
             Bukkit.getLogger().severe("You need to add Vault to your server.");
         }
@@ -54,53 +86,36 @@ public class main extends JavaPlugin implements Listener{
    
     @EventHandler
     public void onDrop(PlayerDropItemEvent e){
+    	if(!getConfig().getBoolean("Use_Holograms_If_Possible"))
+			return;
+    	
     	ItemStack item = e.getItemDrop().getItemStack();
-    	if(Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays") && item.getType().equals(Material.PAPER) && item.hasItemMeta() && item.getItemMeta().hasLore()){
-    		List<String> lore = item.getItemMeta().getLore();
-    		boolean isPaper = false;
-            double worth = 0;
-            for(String s : lore){
-                if(s.contains(convertToInvisibleString("PAPERMONEY"))){
-                    isPaper = true;
-                    String withoutKnowledges = convertBack(s.replace(convertToInvisibleString("PAPERMONEY"), ""));
-                    if(withoutKnowledges.contains(".")){
-                        int i = 0;
-                        int foundIt = 0;
-                        for(char c : withoutKnowledges.toCharArray()){
-                            if(c == '.'){
-                                foundIt = i;
-                            }
-                            i++;
-                        }
-                        withoutKnowledges = withoutKnowledges.substring(0, foundIt);
-                    }
-                    worth = Double.valueOf(withoutKnowledges.replace("§", ""));
-                }
-            }
-    		if(isPaper){
-    			tracking.add(e.getItemDrop().getUniqueId());
-    	    	amountMap.put(e.getItemDrop().getUniqueId(), worth);
-    	    	itemScheduleDatabase.put(e.getItemDrop().getUniqueId(), Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {public void run() {
-    				if(tracking.contains(e.getItemDrop().getUniqueId()))
-    					holographShit.handle(e.getItemDrop().getUniqueId());
-    				else{
-    					Bukkit.getScheduler().cancelTask(itemScheduleDatabase.get(e.getItemDrop().getUniqueId()));
-    					itemScheduleDatabase.remove(e.getItemDrop().getUniqueId());
-    					if(holographShit.holographDatabase.containsKey(e.getItemDrop().getUniqueId())) {
-    						holographShit.holographDatabase.get(e.getItemDrop().getUniqueId()).delete();
-        					holographShit.holographDatabase.remove(e.getItemDrop().getUniqueId());
-    					}
-    				}
-    			}}, 0L, 1L));
+    	if(Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays") && item.getType().equals(Material.PAPER) && item.hasItemMeta()){
+    		NamespacedKey key = new NamespacedKey(this, "value");
+            if(item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
+            	double worth = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
+    			holographShit.createHologram(e.getItemDrop(), worth);
     		}
     	}
     }
     
     @EventHandler
-    public void onPickup(PlayerPickupItemEvent e){
+    public void onItemMerge(ItemMergeEvent e) {
+    	if(!getConfig().getBoolean("Use_Holograms_If_Possible"))
+			return;
+    	
+    	holographShit.handleMerge(e.getEntity(), e.getTarget());
+    }
+    
+    @EventHandler
+    public void onPickup(EntityPickupItemEvent e){
+    	if(!e.getEntityType().equals(EntityType.PLAYER))
+    		return;
+    	if(!getConfig().getBoolean("Use_Holograms_If_Possible"))
+			return;
+    	
     	UUID u = e.getItem().getUniqueId();
-    	tracking.remove(u);
-    	amountMap.remove(u);
+    	holographShit.destroyHologram(u);
     }
     
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
@@ -111,37 +126,55 @@ public class main extends JavaPlugin implements Listener{
             if(label.equalsIgnoreCase("pmoney") || label.equalsIgnoreCase("papermoney")){
                 if(args.length == 0){
                     explain = true;
-                }
-                if(args.length == 1){
-                    explain = true;
-                }
-                if(args.length == 2){
+                }else if(args.length == 1){
+                	if(args[0].equalsIgnoreCase("test") && p.getName().equals("TheTealViper")) {
+                		Bukkit.broadcastMessage(p.getInventory().getItemInMainHand().getItemMeta().getCustomModelData() + "");
+                	}
+                	if(args[0].equalsIgnoreCase("reload")) {
+                		if(p.hasPermission("papermoney.reload")){
+                			p.sendMessage(prefix + "Plugin configs reloaded!");
+                			reloadConfig();
+                			MESSAGES.reload();
+                			prefix = makeColors(MESSAGES.getString("Prefix")) + " ";
+                	        help = makeColors(MESSAGES.getString("Help")) + " ";
+                		}
+                	}else if(args[0].equalsIgnoreCase("split") && getConfig().getBoolean("Enable_Money_Splitting")) {
+                		if(p.hasPermission("papermoney.split")){
+                			p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Split_Explain"), p, -1)));
+                            return false;
+                		}
+                	}else {
+                		explain = true;
+                	}
+                }else if(args.length == 2){
                     if(args[0].equalsIgnoreCase("make")){
                         if(p.hasPermission("papermoney.make")){
                             if(!args[1].matches("^[0-9,.]+$")){
-                                p.sendMessage(prefix + "/pmoney make (amount)" + help + " - Makes a note with a certain value.");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Make_Explain"), p, -1)));
                                 return false;
                             }
                             if(p.getInventory().firstEmpty() == -1){
-                                p.sendMessage(prefix + "Your inventory is full.");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Full_Inventory_Warning"), p, -1)));
                                 return false;
                             }
                             if(Double.valueOf(args[1]) < getConfig().getDouble("Min_Amount")) {
-                            	p.sendMessage(prefix + "You must use a value greater or equal to " + getConfig().getDouble("Min_Amount"));
+                            	p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Value_Must_Meet_Minimum_Warning"), p, Double.valueOf(args[1]))));
                             	return false;
                             }
                            
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = new ItemStack(Material.PAPER, 1);
-                            ItemMeta meta = Bukkit.getItemFactory().getItemMeta(Material.STICK);
-                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, Double.valueOf(args[1]))));
+                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemMeta meta = item.getItemMeta();
+                            NamespacedKey key = new NamespacedKey(this, "value");
+                            meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
+                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")))));
                             List<String> lore = getConfig().getStringList("Item_Lore");
                             if(lore != null){
                                 int i = 0;
                                 for(String s : lore){
-                                    s = makeColors(formatWithSyntax(s, p, Double.valueOf(args[1])));
+                                    s = makeColors(formatWithSyntax(s, p, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places"))));
                                     lore.set(i, s);
                                     i++;
                                 }
@@ -153,11 +186,11 @@ public class main extends JavaPlugin implements Listener{
                     }else if(args[0].equalsIgnoreCase("take")){
                         if(p.hasPermission("papermoney.take")){
                             if(!args[1].matches("^[0-9,.]+$")){
-                                p.sendMessage(prefix + "/pmoney take (amount)" + help + " - Turns money from your bank into a note.");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Take_Explain"), p, -1)));
                                 return false;
                             }
                             if(p.getInventory().firstEmpty() == -1){
-                                p.sendMessage(prefix + "Your inventory is full.");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Full_Inventory_Warning"), p, -1)));
                                 return false;
                             }
                             if(econ == null){
@@ -165,25 +198,27 @@ public class main extends JavaPlugin implements Listener{
                                 return false;
                             }
                             if(!econ.has(p.getName(), Double.valueOf(args[1]))){
-                                p.sendMessage(prefix + ChatColor.RED + "You don't have that much money!");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Not_Enough_Money_Warning"), p, Double.valueOf(args[1]))));
                                 return false;
                             }
                             if(Double.valueOf(args[1]) < getConfig().getDouble("Min_Amount")) {
-                            	p.sendMessage(prefix + "You must use a value greater or equal to " + getConfig().getDouble("Min_Amount"));
+                            	p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Value_Must_Meet_Minimum_Warning"), p, Double.valueOf(args[1]))));
                             	return false;
                             }
                            
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = new ItemStack(Material.PAPER, 1);
-                            ItemMeta meta = Bukkit.getItemFactory().getItemMeta(Material.STICK);
-                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, Double.valueOf(args[1]))));
+                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemMeta meta = item.getItemMeta();
+                            NamespacedKey key = new NamespacedKey(this, "value");
+                            meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
+                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")))));
                             List<String> lore = getConfig().getStringList("Item_Lore");
                             if(lore != null){
                                 int i = 0;
                                 for(String s : lore){
-                                    s = makeColors(formatWithSyntax(s, p, Double.valueOf(args[1])));
+                                    s = makeColors(formatWithSyntax(s, p, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places"))));
                                     lore.set(i, s);
                                     i++;
                                 }
@@ -193,23 +228,26 @@ public class main extends JavaPlugin implements Listener{
                             p.getInventory().addItem(item);
                             econ.withdrawPlayer(p.getName(), Double.valueOf(args[1]));
                         }
+                    }else if(args[0].equalsIgnoreCase("split") && getConfig().getBoolean("Enable_Money_Splitting")){
+                        if(p.hasPermission("papermoney.split")){
+                        	HandlePaperSplit(p, Arrays.copyOfRange(args, 1, args.length));
+                        }
                     }else{
                         explain = true;
                     }
-                }
-                if(args.length == 3){
+                }else if(args.length == 3){
                     if(args[0].equalsIgnoreCase("take")){
                         if(p.hasPermission("papermoney.take.others")){
                             if(!Bukkit.getOfflinePlayer(args[2]).isOnline()){
-                                p.sendMessage(prefix + "That player is not currently online.");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Player_Offline_Warning"), p, -1)));
                                 return false;
                             }
                             if(!args[1].matches("^[0-9,.]+$")){
-                                p.sendMessage(prefix + "/pmoney take (amount) (playerName)" + help + " - Turns money from another's bank into a note.");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_TakeFromAnother_Explain"), p, -1)));
                                 return false;
                             }
                             if(p.getInventory().firstEmpty() == -1){
-                                p.sendMessage(prefix + "Your inventory is full.");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Full_Inventory_Warning"), p, Double.valueOf(args[1]))));
                                 return false;
                             }
                             if(econ == null){
@@ -217,25 +255,27 @@ public class main extends JavaPlugin implements Listener{
                                 return false;
                             }
                             if(!econ.has(args[2], Double.valueOf(args[1]))){
-                                p.sendMessage(prefix + ChatColor.RED + "They don't have that much money!");
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_AnotherNot_Enough_Money_Warning"), p, Double.valueOf(args[1]))));
                                 return false;
                             }
                             if(Double.valueOf(args[1]) < getConfig().getDouble("Min_Amount")) {
-                            	p.sendMessage(prefix + "You must use a value greater or equal to " + getConfig().getDouble("Min_Amount"));
+                            	p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Value_Must_Meet_Minimum_Warning"), p, Double.valueOf(args[1]))));
                             	return false;
                             }
                            
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = new ItemStack(Material.PAPER, 1);
-                            ItemMeta meta = Bukkit.getItemFactory().getItemMeta(Material.STICK);
-                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, Double.valueOf(args[1]))));
+                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemMeta meta = item.getItemMeta();
+                            NamespacedKey key = new NamespacedKey(this, "value");
+                            meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
+                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")))));
                             List<String> lore = getConfig().getStringList("Item_Lore");
                             if(lore != null){
                                 int i = 0;
                                 for(String s : lore){
-                                    s = makeColors(formatWithSyntax(s, p, Double.valueOf(args[1])));
+                                    s = makeColors(formatWithSyntax(s, p, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places"))));
                                     lore.set(i, s);
                                     i++;
                                 }
@@ -245,24 +285,40 @@ public class main extends JavaPlugin implements Listener{
                             p.getInventory().addItem(item);
                             econ.withdrawPlayer(args[2], Double.valueOf(args[1]));
                         }
+                    }else if(args[0].equalsIgnoreCase("split") && getConfig().getBoolean("Enable_Money_Splitting")){
+                        if(p.hasPermission("papermoney.split")){
+                        	HandlePaperSplit(p, Arrays.copyOfRange(args, 1, args.length));
+                        }
                     }else{
                         explain = true;
                     }
+                }else {
+                	if(args[0].equalsIgnoreCase("split") && getConfig().getBoolean("Enable_Money_Splitting")) {
+                		if(p.hasPermission("papermoney.split")){
+                			HandlePaperSplit(p, Arrays.copyOfRange(args, 1, args.length));
+                        }
+                	}else {
+                		explain = true;
+                	}
                 }
             }
             if(explain && !perms){
-                p.sendMessage(prefix + "Commands:");
+                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Player_Command_Title"), p, -1)));
                 if(p.hasPermission("papermoney.take"))
-                    p.sendMessage("/pmoney take (amount)" + help + " - Turns money from your bank into a note.");
-                if(p.hasPermission("papermoney.make") || p.hasPermission("papermoney.take.others"))
+                    p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Take_Explain"), p, -1)));
+                if(p.hasPermission("papermoney.split") && getConfig().getBoolean("Enable_Money_Splitting"))
+                	p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Split_Explain"), p, -1)));
+                if(p.hasPermission("papermoney.make") || p.hasPermission("papermoney.take.others") || p.hasPermission("papermoney.reload"))
                     p.sendMessage(prefix + "Staff Commands:");
                 if(p.hasPermission("papermoney.make"))
-                    p.sendMessage("/pmoney make (amount)" + help + " - Makes a note with a certain value.");
+                    p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Make_Explain"), p, -1)));
                 if(p.hasPermission("papermoney.take.others"))
-                    p.sendMessage("/pmoney take (amount) (playerName)" + help + " - Turns money from another's bank into a note.");
+                    p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_TakeFromAnother_Explain"), p, -1)));
+                if(p.hasPermission("papermoney.reload"))
+                    p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Reload_Explain"), p, -1)));
             }
             if(perms){
-                p.sendMessage(prefix + "You don't have the perms!");
+                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Missing_Permissions"), p, -1)));
             }
         }
         return false;
@@ -270,36 +326,19 @@ public class main extends JavaPlugin implements Listener{
    
     @EventHandler
     public void onClick(PlayerInteractEvent e){
-        if(e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
+    	if(e.getHand() == null || e.getHand().equals(EquipmentSlot.OFF_HAND))
+    		return;
+        if(e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && !getConfig().getBoolean("Disable_Right_Click_Deposit")){
         	ItemStack item = e.getPlayer().getInventory().getItemInMainHand();
             if(item == null || item.getType().equals(Material.AIR))
                 return;
-            if(item.hasItemMeta() && item.getItemMeta().hasLore() && item.getItemMeta().hasDisplayName()){
-                List<String> lore = item.getItemMeta().getLore();
-                boolean isReal = false;
-                double worth = 0;
-                for(String s : lore){
-                    if(s.contains(convertToInvisibleString("PAPERMONEY"))){
-                        isReal = true;
-                        String withoutKnowledges = convertBack(s.replace(convertToInvisibleString("PAPERMONEY"), ""));
-                        if(withoutKnowledges.contains(".")){
-                            int i = 0;
-                            int foundIt = 0;
-                            for(char c : withoutKnowledges.toCharArray()){
-                                if(c == '.'){
-                                    foundIt = i;
-                                }
-                                i++;
-                            }
-                            withoutKnowledges = withoutKnowledges.substring(0, foundIt + 1);
-                        }
-                        worth = Double.valueOf(withoutKnowledges.replace("§", ""));
-                    }
-                }
-                if(isReal){
-                    econ.depositPlayer(e.getPlayer().getName(), worth);
+            if(item.hasItemMeta()){
+                NamespacedKey key = new NamespacedKey(this, "value");
+                if(item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
+                	double worth = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
+                	econ.depositPlayer(e.getPlayer().getName(), worth);
                     e.getPlayer().getInventory().getItemInMainHand().setAmount(e.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
-                    e.getPlayer().sendMessage(prefix + "$" + numberFormatter(worth) + " was deposited into your bank.");
+                    e.getPlayer().sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Deposited"), e.getPlayer(), worth)));
                     if(!getConfig().getString("Sound").equalsIgnoreCase("none")) {
                     	e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.valueOf(getConfig().getString("Sound")), 1f, 1f);
                     }
@@ -309,6 +348,48 @@ public class main extends JavaPlugin implements Listener{
         }
     }
    
+    @EventHandler
+    public void onDualWield(PlayerSwapHandItemsEvent e) {
+    	ItemStack item = e.getMainHandItem();
+        if(item == null || item.getType().equals(Material.AIR))
+            return;
+        if(item.hasItemMeta()){
+            NamespacedKey key = new NamespacedKey(this, "value");
+            if(item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
+            	double worth = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE) * item.getAmount();
+            	ItemStack offItem = e.getOffHandItem();
+                if(offItem == null || offItem.getType().equals(Material.AIR))
+                    return;
+                if(offItem.hasItemMeta()){
+                    if(offItem.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
+                    	double offWorth = offItem.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE) * offItem.getAmount();
+                    	
+                    	ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                        ItemMeta meta = newMoneyItem.getItemMeta();
+                        NamespacedKey key2 = new NamespacedKey(this, "value");
+                        meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, worth+offWorth);
+                        meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), e.getPlayer(), worth+offWorth)));
+                        List<String> lore = getConfig().getStringList("Item_Lore");
+                        if(lore != null){
+                            int j = 0;
+                            for(String s : lore){
+                                s = makeColors(formatWithSyntax(s, e.getPlayer(), worth+offWorth));
+                                lore.set(j, s);
+                                j++;
+                            }
+                            meta.setLore(lore);
+                        }
+                        newMoneyItem.setItemMeta(meta);
+                        
+                        e.getPlayer().getInventory().setItemInOffHand(newMoneyItem);
+                    	e.getPlayer().getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+                    	e.setCancelled(true);
+                    }
+                }
+            }
+        }
+    }
+    
     public static String makeColors(String s){
         String replaced = ChatColor.translateAlternateColorCodes('&', s.replaceAll("\\\\", " "));
         return replaced;
@@ -333,9 +414,32 @@ public class main extends JavaPlugin implements Listener{
                 s = s.replace(replacer, numberFormatter(worth));
             }
         }
+        replacer = "%pm_prefix%";
+        while(s.contains(replacer)){
+            s = s.replace(replacer, prefix);
+        }
+        replacer = "%pm_help%";
+        while(s.contains(replacer)){
+            s = s.replace(replacer, help);
+        }
+        replacer = "%pm_minimum%";
+        while(s.contains(replacer)){
+            s = s.replace(replacer, numberFormatter(getConfig().getDouble("Min_Amount")));
+        }
         return s;
     }
+    
+    private Double roundToSigFigs(double number, int decimalPlaces) {
+    	return Math.floor(number * Math.pow(10, decimalPlaces))/Math.pow(10, decimalPlaces);
+    }
    
+    public String getStringFormattedDecimal(double worth) {
+    	DecimalFormat df = new DecimalFormat();
+    	df.setMaximumFractionDigits(getConfig().getInt("Maximum_Decimal_Places"));
+    	return df.format(worth);
+		//return String.format("%. "+getConfig().getInt("Maximum_Decimal_Places")+"d", String.valueOf(worth));
+	}
+    
     private String numberFormatter(double number){
         NumberFormat myFormat = NumberFormat.getInstance();
         myFormat.setGroupingUsed(true);
@@ -356,7 +460,7 @@ public class main extends JavaPlugin implements Listener{
 //          e.printStackTrace();
 //      }
 //  }
-   
+    
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return false;
@@ -369,14 +473,108 @@ public class main extends JavaPlugin implements Listener{
         return econ != null;
     }
    
+    
     public static String convertToInvisibleString(String s) {
         String hidden = "";
-        for (char c : s.toCharArray()) hidden += ChatColor.COLOR_CHAR+""+c;
+        for (char c : s.toCharArray()) hidden += "§"+c;
         return hidden;
     }
     public static String convertBack(String s){
         //String converted = ChatColor.stripColor(s);
-        String converted = s.replaceAll("�", "");
+        String converted = s.replaceAll("§", "");
         return converted;
     }
+    
+    private void HandlePaperSplit(Player p, String[] args) {
+    	ItemStack item = p.getInventory().getItemInMainHand();
+        if(item == null || item.getType().equals(Material.AIR)) {
+            //Do nothing
+        	p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Split_NotPaperMoney"), p, -1)));
+        }else{
+        	if(item.hasItemMeta()){
+                NamespacedKey key = new NamespacedKey(this, "value");
+                if(item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
+                	double worthInHand = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE) * item.getAmount();
+                	try
+                	{
+					  double[] amountTyped = new double[args.length];
+					  double totalTyped = 0;
+					  for(int i = 0;i < args.length;i++) {
+						  amountTyped[i] = Double.parseDouble(args[i]);
+						  amountTyped[i] = roundToSigFigs(amountTyped[i], getConfig().getInt("Maximum_Decimal_Places"));
+						  totalTyped += amountTyped[i];
+					  }
+					  if(totalTyped < worthInHand) {
+						  int emptyInvSlots = 1; //Start at 1 because the paper in their hand counts
+						  for(int i = 0; i < 36;i++){
+							  if(p.getInventory().getItem(i) == null || p.getInventory().getItem(i).getType().equals(Material.AIR)){
+								  emptyInvSlots++;
+							  }
+						  }
+						  int inventorySlotsNecessary = args.length;
+						  if(totalTyped < worthInHand)
+						  	  inventorySlotsNecessary++;
+						  if(emptyInvSlots < inventorySlotsNecessary) {
+							  //Not enough inv room to split
+							  p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Split_MissingInv"), p, -1)));
+						  }else {
+							  //All checks have gone through. Give them their money.
+							  p.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+							  for(int i = 0;i < inventorySlotsNecessary;i++) {
+								  if(i+1 > args.length) {
+									    //Leftover money
+									    ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+			                            ItemMeta meta = newMoneyItem.getItemMeta();
+			                            NamespacedKey key2 = new NamespacedKey(this, "value");
+			                            meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, worthInHand-totalTyped);
+			                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, worthInHand-totalTyped)));
+			                            List<String> lore = getConfig().getStringList("Item_Lore");
+			                            if(lore != null){
+			                                int j = 0;
+			                                for(String s : lore){
+			                                    s = makeColors(formatWithSyntax(s, p, worthInHand-totalTyped));
+			                                    lore.set(j, s);
+			                                    j++;
+			                                }
+			                                meta.setLore(lore);
+			                            }
+			                            newMoneyItem.setItemMeta(meta);
+			                            p.getInventory().addItem(newMoneyItem);
+								  }else {
+									    //Arg specific money
+									    ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+			                            ItemMeta meta = newMoneyItem.getItemMeta();
+			                            NamespacedKey key2 = new NamespacedKey(this, "value");
+			                            meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, amountTyped[i]);
+			                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, amountTyped[i])));
+			                            List<String> lore = getConfig().getStringList("Item_Lore");
+			                            if(lore != null){
+			                                int j = 0;
+			                                for(String s : lore){
+			                                    s = makeColors(formatWithSyntax(s, p, amountTyped[i]));
+			                                    lore.set(j, s);
+			                                    j++;
+			                                }
+			                                meta.setLore(lore);
+			                            }
+			                            newMoneyItem.setItemMeta(meta);
+			                            p.getInventory().addItem(newMoneyItem);
+								  }
+							  }
+						  }
+					  }else {
+						  //Worth less than split amount
+						  p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Split_BiggerValue"), p, -1)));
+					  }
+                	}
+                	catch(NumberFormatException e)
+                	{
+                		//Not a double
+                		p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Split_NonNumeric"), p, -1)));
+                	}
+                }
+            }
+        }
+    }
+    
 }

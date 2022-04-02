@@ -3,8 +3,22 @@
 ##########################################################
 Prefix: "&b(&lPaperMoney&r&b)&r"
 
+Enable_Money_Splitting: false
+#Set this to true to allow players to turn larger bills into smaller bills
+#THIS IS LITERALLY A PAPER DUPE. WARNING. THIS, BY DEFINITION, IS A PAPER DUPE.
+#Enable this with care and don't say I didn't warn you.
+#As added precaution, players also need the permission for splitting found
+#    in the permission section below.
+
 Min_Amount: 1
-#This is used to players can't make paper money worth $0 and duplicate paper.
+#This is used so players can't make paper money worth $0 and duplicate paper.
+
+Maximum_Decimal_Places: 2
+#This is to how many places past the decimal point currency can go
+# $19.999 for example would be 3. Most real life currency doesn't go this far.
+# $19.99 would be 2. This is where most real life currency goes.
+# $19.9 would be 1. This is shorter than real life currency
+# $1 would be 0. This limits money to whole numbers.
 
 Use_Holograms_If_Possible: true
 #Self explanatory
@@ -14,13 +28,42 @@ Sound: "NONE"
 #https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
 #Caps matter
 
+Disable_Right_Click_Deposit: false
+#If this is set to true, paper notes are permanently kept in item form
+#Use this if you want a TRULY immersive experience.
+#I can't tell you how to handle distribution, that's on you.
+
+Item:
+ id: PAPER
+ amount: 1
+#id - Case sensitive material name. Not optional to include.
+#amount - This is the size of the item stack. Optional.
+#enchantments - Format is 'ENCHANTMENT:LEVEL'. Optional.
+#- arrowdamage
+#- arrowfire
+#- arrowinfinite
+#- arrowknockback
+#- damage
+#- digspeed
+#- durability
+#- fireaspect
+#- knockback
+#- lootbonusblock
+#- lootbonusmob
+#- luck
+#- protectionfall
+#- protectionfire
+#- silktouch
+#effects - Format is 'EFFECT:LEVEL:TIME (seconds)'.This is the effects that a player will receive upon eating a certain food. Must follow multiple line structure. Optional.
+#        - Effect names can be found at
+#        - https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/potion/PotionEffectType.html
+#tags - Used to make some custom item attributes. All these are optional.
+#- vanilladurability:DURABILITY
+#- custommodeldata:SevenDigitNumber
+
 Item_Name: "&a$&6%pm_bill_worth%"
-
 Item_Lore:
-  - "%pm_IDENTIFIER%"
-#^^^ Don't touch this or put this somewhere else in the lore.
   - "&rA PaperMoney note."
-
 #Syntax
 # %pm_bill_worth% --> The amount that a bill is worth
 # %pm_player_money% --> Player's money
@@ -38,3 +81,16 @@ Item_Lore:
 
 # papermoney.take.others
 #Allows players to run the /pmoney take (playerName) command.
+
+# papermoney.reload
+#Allows players to run the /pmoney reload command
+
+# papermoney.split
+#Allows players to run the /pmoney split command
+
+##########################################################
+#                        Version                         #
+##########################################################
+
+VERSION: 4
+#Do not touch this. No touchy.

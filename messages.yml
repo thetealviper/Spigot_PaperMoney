@@ -1,0 +1,24 @@
+Prefix: "&b[&lPM&r&b]&r"
+Help: "&r&7"
+
+PMoney_Make_Explain: "%pm_prefix%/pmoney make (amount) %pm_help%- Makes a note with a certain value."
+PMoney_Take_Explain: "%pm_prefix%/pmoney take (amount) %pm_help%- Turns money from your bank into a note."
+PMoney_TakeFromAnother_Explain: "%pm_prefix%/pmoney take (amount) (playerName) %pm_help%- Turns money from another's bank into a note."
+PMoney_Reload_Explain: "%pm_prefix%/pmoney reload %pm_help%- Reloads configs."
+PMoney_Missing_Permissions: "%pm_prefix%You don't have the perms!"
+PMoney_Split_Explain: "%pm_prefix%/pmoney split (amount) (amount) (amount)... %pm_help%- Turns a single note into smaller notes."
+PMoney_Split_NonNumeric: "%pm_prefix%That is not a number. Please enter a number."
+PMoney_Split_NotPaperMoney: "%pm_prefix%You must have PaperMoney in your main hand!"
+PMoney_Split_BiggerValue: "%pm_prefix%The money in your hand isn't worth that much!"
+PMoney_Split_MissingInv: "%pm_prefix%You are trying to split into more money than you can hold!"
+
+PMoney_Player_Command_Title: "%pm_prefix%Commands:"
+PMoney_Staff_Command_Title: "%pm_prefix%Staff Commands:"
+
+PMoney_Not_Enough_Money_Warning: "%pm_prefix%&r&cYou don't have that much money!"
+PMoney_AnotherNot_Enough_Money_Warning: "%pm_prefix%&r&cThey don't have that much money!"
+PMoney_Full_Inventory_Warning: "%pm_prefix%Your inventory is full."
+PMoney_Value_Must_Meet_Minimum_Warning: "%pm_prefix%You must use a value greater or equal to %pm_minimum%"
+PMoney_Player_Offline_Warning: "%pm_prefix%That player is not currently online."
+
+PMoney_Deposited: "%pm_prefix%$%pm_bill_worth% was deposited into your bank."
