@@ -33,6 +33,9 @@ Disable_Right_Click_Deposit: false
 #Use this if you want a TRULY immersive experience.
 #I can't tell you how to handle distribution, that's on you.
 
+Drop_All_On_Death: false
+#If this is set to true, players will drop all their money when they die.
+
 Item:
  id: PAPER
  amount: 1
@@ -92,5 +95,5 @@ Item_Lore:
 #                        Version                         #
 ##########################################################
 
-VERSION: 4
+VERSION: 5
 #Do not touch this. No touchy.

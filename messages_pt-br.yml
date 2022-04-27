@@ -1,0 +1,36 @@
+#################################################
+#############   PT-BR Sample File   #############
+###############   Credit: FIFTC   ###############
+#################################################
+#Esse arquivo � um modelo, caso queira usar, transfira
+#o conte�do para: "messages.yml" esse ser� usado no jogo.
+#################################################
+#This file will NOT be used in game. It is a template.
+#"messages.yml" will be used in game.
+#################################################
+
+
+Prefix: "&b[&lPM&r&b]&r"
+Help: "&r&7"
+
+PMoney_Make_Explain: "%pm_prefix%/pmoney make (quantia) %pm_help%- Faz uma nota com um determinado valor."
+PMoney_Take_Explain: "%pm_prefix%/pmoney take (quantia) %pm_help%- Transforma o dinheiro do seu banco em uma nota."
+PMoney_TakeFromAnother_Explain: "%pm_prefix%/pmoney take (quantia) (Jogador) %pm_help%- Transforma o dinheiro do banco de outra pessoa em uma nota."
+PMoney_Reload_Explain: "%pm_prefix%/pmoney reload %pm_help%- Recarrega a configuração."
+PMoney_Missing_Permissions: "%pm_prefix%Você não tem os permissão!"
+PMoney_Split_Explain: "%pm_prefix%/pmoney split (quantia) (quantia) (quantia)... %pm_help%- Transforma uma única nota em notas menores."
+PMoney_Split_NonNumeric: "%pm_prefix%Isso não é um número. Por favor, coloque um numero."
+PMoney_Split_NotPaperMoney: "%pm_prefix%Você deve ter um Papel-Moeda em sua mão principal!"
+PMoney_Split_BiggerValue: "%pm_prefix%O dinheiro na sua mão não vale tanto!"
+PMoney_Split_MissingInv: "%pm_prefix%Você está tentando dividir em mais dinheiro do que você pode segurar!"
+
+PMoney_Player_Command_Title: "%pm_prefix%Comandos:"
+PMoney_Staff_Command_Title: "%pm_prefix%Comandos administrativos:"
+
+PMoney_Not_Enough_Money_Warning: "%pm_prefix%&r&cVocê não tem tanto dinheiro!"
+PMoney_AnotherNot_Enough_Money_Warning: "%pm_prefix%&r&cEles não têm tanto dinheiro!"
+PMoney_Full_Inventory_Warning: "%pm_prefix%Seu inventário está cheio."
+PMoney_Value_Must_Meet_Minimum_Warning: "%pm_prefix%Você deve usar um valor maior ou igual a %pm_minimum%"
+PMoney_Player_Offline_Warning: "%pm_prefix%Esse jogador não está online no momento."
+
+PMoney_Deposited: "%pm_prefix%$%pm_bill_worth% foi depositado na sua conta."

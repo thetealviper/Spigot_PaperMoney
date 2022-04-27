@@ -12,6 +12,8 @@ public class UtilityEquippedJavaPlugin extends JavaPlugin{
 	public void StartupPlugin(UtilityEquippedJavaPlugin plugin, String spigotID) {
 		this.plugin = plugin;
 		new StartupUpdateCheck(plugin, spigotID);
+		getLoadItemstackFromConfig();
+		getLoadEnhancedItemstackFromConfig();
 	}
 	
 	public LoadEnhancedItemstackFromConfig getLoadEnhancedItemstackFromConfig() {
@@ -24,12 +26,12 @@ public class UtilityEquippedJavaPlugin extends JavaPlugin{
 	
 	public LoadItemstackFromConfig getLoadItemstackFromConfig() {
 		if(_LoadItemstackFromConfig == null)
-			_LoadItemstackFromConfig = new LoadItemstackFromConfig(this);
+			_LoadItemstackFromConfig = new LoadItemstackFromConfig(plugin);
 		return _LoadItemstackFromConfig;
 	}
 	
 	public void WipeItemstackFromConfigCache() {
-		_LoadItemstackFromConfig = new LoadItemstackFromConfig(this);
+		_LoadItemstackFromConfig = new LoadItemstackFromConfig(plugin);
 		_LoadEnhancedItemstackFromConfig = new LoadEnhancedItemstackFromConfig(plugin);
 	}
 	

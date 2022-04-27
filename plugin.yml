@@ -1,11 +1,11 @@
 name: "PaperMoney"
 author: TheTealViper
-version: "1.18.1.b.7"
+version: "1.18.2.a.1"
 api-version: 1.16
 description: "Physical money"
-main: me.TheTealViper.papermoney.main
+main: me.TheTealViper.papermoney.PaperMoney
 depend: [Vault]
-softdepend: [HolographicDisplays]
+softdepend: [HolographicDisplays, DecentHolograms]
 commands:
   papermoney:
     description: "Main command"

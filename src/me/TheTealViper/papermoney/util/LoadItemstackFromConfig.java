@@ -1,26 +1,27 @@
 package me.TheTealViper.papermoney.util;
 
-import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.apache.commons.codec.binary.Base64;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Base64;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
 
 public class LoadItemstackFromConfig {
 	private UtilityEquippedJavaPlugin plugin = null;
@@ -158,22 +159,20 @@ public class LoadItemstackFromConfig {
 				String value = tagStringProcessed[1];
 				switch(tag) {
 					case "playerskullskin":
-					     JsonParser parser = new JsonParser();
-					     JsonObject o = parser.parse(new String(Base64.decodeBase64(value))).getAsJsonObject();
-					     String skinUrl = o.get("textures").getAsJsonObject().get("SKIN").getAsJsonObject().get("url").getAsString();
-					     SkullMeta skullMeta = (SkullMeta) meta;
-					     GameProfile profile = new GameProfile(UUID.randomUUID(), null);
-					     byte[] encodedData = Base64.encodeBase64(("{textures:{SKIN:{url:\"" + skinUrl + "\"}}}").getBytes());
-					     profile.getProperties().put("textures", new Property("textures", new String(encodedData)));
-					     Field profileField = null;
-					     try {
-					       profileField = skullMeta.getClass().getDeclaredField("profile");
-					       profileField.setAccessible(true);
-					       profileField.set(skullMeta, profile);
-					     } catch (Exception e) {
-					       e.printStackTrace();
-					     }
-					     meta = skullMeta;
+					    JsonObject o = JsonParser.parseString(new String(Base64.decodeBase64(value))).getAsJsonObject();
+					    String skinUrl = o.get("textures").getAsJsonObject().get("SKIN").getAsJsonObject().get("url").getAsString();
+					    SkullMeta skullMeta = (SkullMeta) meta;
+					    PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+					    PlayerTextures textures = profile.getTextures();
+						try {
+							textures.setSkin(new URL(skinUrl));
+						} catch (MalformedURLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					    profile.setTextures(textures);
+					    skullMeta.setOwnerProfile(profile);
+					    meta = skullMeta;
 						break;
 					case "vanilladurability":
 						Damageable dam = (Damageable) meta;

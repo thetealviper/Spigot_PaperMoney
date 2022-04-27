@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -29,8 +28,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemMergeEvent;
-import org.bukkit.event.inventory.InventoryInteractEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
@@ -40,39 +38,52 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import me.TheTealViper.papermoney.implementations.DecentHologramsImplementation;
+import me.TheTealViper.papermoney.implementations.HolographicDisplaysImplementation;
+import me.TheTealViper.papermoney.implementations.hologramPrototype;
 import me.TheTealViper.papermoney.util.PluginFile;
 import me.TheTealViper.papermoney.util.UtilityEquippedJavaPlugin;
 import net.milkbowl.vault.economy.Economy;
  
-public class main extends UtilityEquippedJavaPlugin implements Listener{
+public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
     public String prefix;
     public String help;
     public Economy econ;
-    List<UUID> tracking = new ArrayList<UUID>();
-    Map<UUID, Double> amountMap = new HashMap<UUID, Double>();
-    Map<UUID, Integer> itemScheduleDatabase = new HashMap<UUID, Integer>();
+    public List<UUID> tracking = new ArrayList<UUID>();
+    public Map<UUID, Double> amountMap = new HashMap<UUID, Double>();
+    public Map<UUID, Integer> itemScheduleDatabase = new HashMap<UUID, Integer>();
     PluginFile MESSAGES;
+    public boolean foundHolographicDisplays = false;
+	public boolean foundDecentHolograms = false;
+//	public HolographicDisplaysImplementation HDI;
+//	public DecentHologramsImplementation DHI;
  
+	//Fixed bug with hologram only showing for paper
+	//Fixed bug allowing custom textured player heads (1.18.2 only)
+	//Known issue with DecentHolograms spamming Q leaves phantom holograms that don't actually exist. Some players see them differently.
+	
     public void onEnable(){
+    	if(Bukkit.getServer().getPluginManager().getPlugin("DecentHolograms") != null) {
+			foundDecentHolograms = true;
+//			DHI = new DecentHologramsImplementation();
+			Bukkit.getLogger().info("PaperMoney running in DecentHolograms mode.");
+		}else if(Bukkit.getServer().getPluginManager().getPlugin("HolographicDisplays") != null) {
+			foundHolographicDisplays = true;
+//			HDI = new HolographicDisplaysImplementation();
+			Bukkit.getLogger().info("PaperMoney running in HolographicDisplays mode.");
+		}else {
+			//Do Nothing ATM
+			Bukkit.getLogger().info("PaperMoney didn't find a proper hologram plugin.");
+		}
     	StartupPlugin(this, "42464");
     	
-    	if(!new File("plugins/PaperMoney/messages.yml").exists()) {
-			try {
-				InputStream inStream = getResource("messages.yml");
-				File targetFile = new File("plugins/PaperMoney/messages.yml");
-			    OutputStream outStream = new FileOutputStream(targetFile);
-			    byte[] buffer = new byte[inStream.available()];
-			    inStream.read(buffer);
-			    outStream.write(buffer);
-			    outStream.close();
-			    inStream.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+    	ensureFileExists("messages_pt-br.yml");
+    	ensureFileExists("messages.yml");
 		MESSAGES = new PluginFile(this, "messages.yml");
     	
-    	holographShit.plugin = this;
+    	hologramPrototype.plugin = this;
+    	HolographicDisplaysImplementation.plugin = this;
+    	DecentHologramsImplementation.plugin = this;
         prefix = makeColors(MESSAGES.getString("Prefix")) + " ";
         help = makeColors(MESSAGES.getString("Help")) + " ";
         if(!setupEconomy()){
@@ -90,11 +101,12 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
 			return;
     	
     	ItemStack item = e.getItemDrop().getItemStack();
-    	if(Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays") && item.getType().equals(Material.PAPER) && item.hasItemMeta()){
+    	if((foundDecentHolograms || foundHolographicDisplays)
+    			&& (item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(getLoadEnhancedItemstackFromConfig().KEY_VALUE, PersistentDataType.DOUBLE))){
     		NamespacedKey key = new NamespacedKey(this, "value");
             if(item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
             	double worth = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
-    			holographShit.createHologram(e.getItemDrop(), worth);
+    			hologramPrototype.createHologram(e.getItemDrop(), worth);
     		}
     	}
     }
@@ -104,7 +116,7 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
     	if(!getConfig().getBoolean("Use_Holograms_If_Possible"))
 			return;
     	
-    	holographShit.handleMerge(e.getEntity(), e.getTarget());
+    	hologramPrototype.handleMerge(e.getEntity(), e.getTarget());
     }
     
     @EventHandler
@@ -115,10 +127,44 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
 			return;
     	
     	UUID u = e.getItem().getUniqueId();
-    	holographShit.destroyHologram(u);
+    	hologramPrototype.destroyHologram(u);
     }
     
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) {
+    	if(!getConfig().getBoolean("Drop_All_On_Death"))
+    		return;
+    	if(econ == null){
+            getLogger().severe("MISSING VAULT");
+            return;
+        }
+        double bal = econ.getBalance(Bukkit.getOfflinePlayer(e.getEntity().getUniqueId()));
+        if(bal < getConfig().getDouble("Min_Amount")) {
+        	return;
+        }
+        
+        ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+        ItemMeta meta = item.getItemMeta();
+        NamespacedKey key = new NamespacedKey(this, "value");
+        meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, bal);
+        meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), e.getEntity(), bal)));
+        List<String> lore = getConfig().getStringList("Item_Lore");
+        if(lore != null){
+            int i = 0;
+            for(String s : lore){
+                s = makeColors(formatWithSyntax(s, e.getEntity(), bal));
+                lore.set(i, s);
+                i++;
+            }
+            meta.setLore(lore);
+        }
+        item.setItemMeta(meta);
+        econ.withdrawPlayer(Bukkit.getOfflinePlayer(e.getEntity().getUniqueId()), bal);
+        e.getEntity().getWorld().dropItem(e.getEntity().getLocation(), item);
+    }
+    
+    @SuppressWarnings("deprecation")
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
         if(sender instanceof Player){
             Player p = (Player) sender;
             boolean explain = false;
@@ -137,12 +183,14 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                 			MESSAGES.reload();
                 			prefix = makeColors(MESSAGES.getString("Prefix")) + " ";
                 	        help = makeColors(MESSAGES.getString("Help")) + " ";
-                		}
+                		} else
+                			perms = true;
                 	}else if(args[0].equalsIgnoreCase("split") && getConfig().getBoolean("Enable_Money_Splitting")) {
                 		if(p.hasPermission("papermoney.split")){
                 			p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Split_Explain"), p, -1)));
                             return false;
-                		}
+                		} else
+                			perms = true;
                 	}else {
                 		explain = true;
                 	}
@@ -165,7 +213,7 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                             ItemMeta meta = item.getItemMeta();
                             NamespacedKey key = new NamespacedKey(this, "value");
                             meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
@@ -182,7 +230,8 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                             }
                             item.setItemMeta(meta);
                             p.getInventory().addItem(item);
-                        }
+                        } else
+                        	perms = true;
                     }else if(args[0].equalsIgnoreCase("take")){
                         if(p.hasPermission("papermoney.take")){
                             if(!args[1].matches("^[0-9,.]+$")){
@@ -209,7 +258,7 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                             ItemMeta meta = item.getItemMeta();
                             NamespacedKey key = new NamespacedKey(this, "value");
                             meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
@@ -227,11 +276,13 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                             item.setItemMeta(meta);
                             p.getInventory().addItem(item);
                             econ.withdrawPlayer(p.getName(), Double.valueOf(args[1]));
-                        }
+                        } else
+                        	perms = true;
                     }else if(args[0].equalsIgnoreCase("split") && getConfig().getBoolean("Enable_Money_Splitting")){
                         if(p.hasPermission("papermoney.split")){
                         	HandlePaperSplit(p, Arrays.copyOfRange(args, 1, args.length));
-                        }
+                        } else
+                        	perms = true;
                     }else{
                         explain = true;
                     }
@@ -266,7 +317,7 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                             ItemMeta meta = item.getItemMeta();
                             NamespacedKey key = new NamespacedKey(this, "value");
                             meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
@@ -284,11 +335,13 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                             item.setItemMeta(meta);
                             p.getInventory().addItem(item);
                             econ.withdrawPlayer(args[2], Double.valueOf(args[1]));
-                        }
+                        } else
+                        	perms = true;
                     }else if(args[0].equalsIgnoreCase("split") && getConfig().getBoolean("Enable_Money_Splitting")){
                         if(p.hasPermission("papermoney.split")){
                         	HandlePaperSplit(p, Arrays.copyOfRange(args, 1, args.length));
-                        }
+                        } else
+                        	perms = true;
                     }else{
                         explain = true;
                     }
@@ -296,7 +349,8 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                 	if(args[0].equalsIgnoreCase("split") && getConfig().getBoolean("Enable_Money_Splitting")) {
                 		if(p.hasPermission("papermoney.split")){
                 			HandlePaperSplit(p, Arrays.copyOfRange(args, 1, args.length));
-                        }
+                        } else
+                        	perms = true;
                 	}else {
                 		explain = true;
                 	}
@@ -323,17 +377,21 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
         }
         return false;
     }
-   
-    @EventHandler
+    
+    @SuppressWarnings("deprecation")
+	@EventHandler
     public void onClick(PlayerInteractEvent e){
+    	NamespacedKey key = new NamespacedKey(this, "value");
     	if(e.getHand() == null || e.getHand().equals(EquipmentSlot.OFF_HAND))
     		return;
-        if(e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && !getConfig().getBoolean("Disable_Right_Click_Deposit")){
+    	if(e.getItem() != null && (e.getItem().hasItemMeta() || e.getItem().getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE))) {
+    		e.setCancelled(true);
+    	}
+        if((e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) && !getConfig().getBoolean("Disable_Right_Click_Deposit")){
         	ItemStack item = e.getPlayer().getInventory().getItemInMainHand();
             if(item == null || item.getType().equals(Material.AIR))
                 return;
             if(item.hasItemMeta()){
-                NamespacedKey key = new NamespacedKey(this, "value");
                 if(item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
                 	double worth = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
                 	econ.depositPlayer(e.getPlayer().getName(), worth);
@@ -364,7 +422,7 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                     if(offItem.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
                     	double offWorth = offItem.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE) * offItem.getAmount();
                     	
-                    	ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                    	ItemStack newMoneyItem = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                         ItemMeta meta = newMoneyItem.getItemMeta();
                         NamespacedKey key2 = new NamespacedKey(this, "value");
                         meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, worth+offWorth);
@@ -395,7 +453,8 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
         return replaced;
     }
    
-    public String formatWithSyntax(String s, Player p, double worth){
+    @SuppressWarnings("deprecation")
+	public String formatWithSyntax(String s, Player p, double worth){
         String replacer = "%pm_player_money%";
         while(s.contains(replacer)){
             s = s.replace(replacer, numberFormatter(econ.getBalance(p.getName())));
@@ -523,7 +582,7 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
 							  for(int i = 0;i < inventorySlotsNecessary;i++) {
 								  if(i+1 > args.length) {
 									    //Leftover money
-									    ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+									    ItemStack newMoneyItem = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
 			                            ItemMeta meta = newMoneyItem.getItemMeta();
 			                            NamespacedKey key2 = new NamespacedKey(this, "value");
 			                            meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, worthInHand-totalTyped);
@@ -542,7 +601,7 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
 			                            p.getInventory().addItem(newMoneyItem);
 								  }else {
 									    //Arg specific money
-									    ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+									    ItemStack newMoneyItem = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
 			                            ItemMeta meta = newMoneyItem.getItemMeta();
 			                            NamespacedKey key2 = new NamespacedKey(this, "value");
 			                            meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, amountTyped[i]);
@@ -575,6 +634,24 @@ public class main extends UtilityEquippedJavaPlugin implements Listener{
                 }
             }
         }
+    }
+    
+    public void ensureFileExists(String filename) {
+    	if(!new File("plugins/PaperMoney/" + filename).exists()) {
+    		Bukkit.getLogger().info("Copying File: " + filename);
+			try {
+				InputStream inStream = getResource(filename);
+				File targetFile = new File("plugins/PaperMoney/" + filename);
+			    OutputStream outStream = new FileOutputStream(targetFile);
+			    byte[] buffer = new byte[inStream.available()];
+			    inStream.read(buffer);
+			    outStream.write(buffer);
+			    outStream.close();
+			    inStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
     }
     
 }

@@ -8,13 +8,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class StartupUpdateCheck {
 	
@@ -69,7 +71,7 @@ public class StartupUpdateCheck {
 		if(update){
 			File file = new File("plugins/" + plugin.getDescription().getName() + "/config.yml");
 			try {
-				com.google.common.io.Files.copy(file, new File("plugins/" + plugin.getDescription().getName() + "/configBACKUP_" + oldVersion + ".yml"));
+				FileUtils.copyFile(file, new File("plugins/" + plugin.getDescription().getName() + "/configBACKUP_" + oldVersion + ".yml"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -88,8 +90,8 @@ public class StartupUpdateCheck {
         	HttpResponse<String> response = client.send(request,
         		    HttpResponse.BodyHandlers.ofString());
 
-        	JSONObject object = (JSONObject) JSONValue.parse(response.body());
-        	return (String) object.get("name");
+        	JsonObject object = (JsonObject) JsonParser.parseString(response.body());
+        	return (String) object.get("name").getAsString();
         } catch (Exception ex) {
             
         }
