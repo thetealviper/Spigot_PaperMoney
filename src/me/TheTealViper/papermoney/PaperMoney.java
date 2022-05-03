@@ -384,9 +384,11 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
     	NamespacedKey key = new NamespacedKey(this, "value");
     	if(e.getHand() == null || e.getHand().equals(EquipmentSlot.OFF_HAND))
     		return;
-    	if(e.getItem() != null && (e.getItem().hasItemMeta() || e.getItem().getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE))) {
+    	if(e.getItem() != null && e.getItem().hasItemMeta() && e.getItem().getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE))
     		e.setCancelled(true);
-    	}
+    	else
+    		return;
+    	
         if((e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) && !getConfig().getBoolean("Disable_Right_Click_Deposit")){
         	ItemStack item = e.getPlayer().getInventory().getItemInMainHand();
             if(item == null || item.getType().equals(Material.AIR))
