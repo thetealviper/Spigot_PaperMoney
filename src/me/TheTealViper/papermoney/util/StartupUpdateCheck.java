@@ -90,7 +90,7 @@ public class StartupUpdateCheck {
         	HttpResponse<String> response = client.send(request,
         		    HttpResponse.BodyHandlers.ofString());
 
-        	JsonObject object = (JsonObject) JsonParser.parseString(response.body());
+        	JsonObject object = (JsonObject) new JsonParser().parse(response.body());
         	return (String) object.get("name").getAsString();
         } catch (Exception ex) {
             

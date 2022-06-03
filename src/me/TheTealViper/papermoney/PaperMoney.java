@@ -43,6 +43,7 @@ import me.TheTealViper.papermoney.implementations.HolographicDisplaysImplementat
 import me.TheTealViper.papermoney.implementations.hologramPrototype;
 import me.TheTealViper.papermoney.util.PluginFile;
 import me.TheTealViper.papermoney.util.UtilityEquippedJavaPlugin;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.milkbowl.vault.economy.Economy;
  
 public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
@@ -487,6 +488,9 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
         while(s.contains(replacer)){
             s = s.replace(replacer, numberFormatter(getConfig().getDouble("Min_Amount")));
         }
+        
+        s = PlaceholderAPI.setPlaceholders(p, s);
+        
         return s;
     }
     

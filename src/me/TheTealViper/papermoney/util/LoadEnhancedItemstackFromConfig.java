@@ -30,12 +30,6 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.reflect.StructureModifier;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -95,24 +89,24 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 		KEY_FORCESTACK = new NamespacedKey(plugin, "forcestack");
 		
 		//Register packet listener to handle some max stack size things
-		ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(plugin, PacketType.Play.Server.SET_SLOT) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-            	PacketContainer packet = event.getPacket();
-            	StructureModifier<ItemStack> itemStructureModifier = packet.getItemModifier();
-            	ItemStack item = itemStructureModifier.read(0);
-        		if(item == null || !item.hasItemMeta() || !item.getItemMeta().getPersistentDataContainer().has(KEY_FORCESTACK, PersistentDataType.INTEGER))
-        			return;
-        		
-        		if(item.getAmount() > item.getItemMeta().getPersistentDataContainer().get(KEY_FORCESTACK, PersistentDataType.INTEGER)) {
-        			//Trigger a necessary inventory cleanup
-        			ItemStack clone = item.clone();
-        			clone.setAmount(1); //Set amount to 0 so we don't actually add anything, just cleanup what's there
-        			cleanInventoryOfItem(event.getPlayer(), event.getPlayer().getOpenInventory().getTopInventory(), clone);
-        			cleanInventoryOfItem(event.getPlayer(), event.getPlayer().getOpenInventory().getBottomInventory(), clone);
-        		}
-            }
-        });
+//		ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(plugin, PacketType.Play.Server.SET_SLOT) {
+//            @Override
+//            public void onPacketSending(PacketEvent event) {
+//            	PacketContainer packet = event.getPacket();
+//            	StructureModifier<ItemStack> itemStructureModifier = packet.getItemModifier();
+//            	ItemStack item = itemStructureModifier.read(0);
+//        		if(item == null || !item.hasItemMeta() || !item.getItemMeta().getPersistentDataContainer().has(KEY_FORCESTACK, PersistentDataType.INTEGER))
+//        			return;
+//        		
+//        		if(item.getAmount() > item.getItemMeta().getPersistentDataContainer().get(KEY_FORCESTACK, PersistentDataType.INTEGER)) {
+//        			//Trigger a necessary inventory cleanup
+//        			ItemStack clone = item.clone();
+//        			clone.setAmount(1); //Set amount to 0 so we don't actually add anything, just cleanup what's there
+//        			cleanInventoryOfItem(event.getPlayer(), event.getPlayer().getOpenInventory().getTopInventory(), clone);
+//        			cleanInventoryOfItem(event.getPlayer(), event.getPlayer().getOpenInventory().getBottomInventory(), clone);
+//        		}
+//            }
+//        });
 	}
 	
 	public ItemStack getItem(ConfigurationSection sec) {
@@ -210,7 +204,7 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 				String value = tagStringProcessed[1];
 				switch(tag) {
 					case "playerskullskin":
-						JsonObject o = JsonParser.parseString(new String(Base64.decodeBase64(value))).getAsJsonObject();
+						JsonObject o = new JsonParser().parse(new String(Base64.decodeBase64(value))).getAsJsonObject();
 						String skinUrl = o.get("textures").getAsJsonObject().get("SKIN").getAsJsonObject().get("url").getAsString();
 						SkullMeta skullMeta = (SkullMeta) meta;
 						PlayerProfile profile = Bukkit.createPlayerProfile(UUID.nameUUIDFromBytes(skinUrl.getBytes()));

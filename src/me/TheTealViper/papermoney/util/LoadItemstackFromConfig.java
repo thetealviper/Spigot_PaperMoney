@@ -159,7 +159,7 @@ public class LoadItemstackFromConfig {
 				String value = tagStringProcessed[1];
 				switch(tag) {
 					case "playerskullskin":
-					    JsonObject o = JsonParser.parseString(new String(Base64.decodeBase64(value))).getAsJsonObject();
+					    JsonObject o = new JsonParser().parse(new String(Base64.decodeBase64(value))).getAsJsonObject();
 					    String skinUrl = o.get("textures").getAsJsonObject().get("SKIN").getAsJsonObject().get("url").getAsString();
 					    SkullMeta skullMeta = (SkullMeta) meta;
 					    PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
