@@ -40,10 +40,10 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import me.TheTealViper.papermoney.implementations.DecentHologramsImplementation;
 import me.TheTealViper.papermoney.implementations.HolographicDisplaysImplementation;
+import me.TheTealViper.papermoney.implementations.PlaceholderAPIImplementation;
 import me.TheTealViper.papermoney.implementations.hologramPrototype;
 import me.TheTealViper.papermoney.util.PluginFile;
 import me.TheTealViper.papermoney.util.UtilityEquippedJavaPlugin;
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.milkbowl.vault.economy.Economy;
  
 public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
@@ -58,6 +58,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
 	public boolean foundDecentHolograms = false;
 //	public HolographicDisplaysImplementation HDI;
 //	public DecentHologramsImplementation DHI;
+	private boolean isPlaceholderAPIEnabled = false;
  
 	//Fixed bug with hologram only showing for paper
 	//Fixed bug allowing custom textured player heads (1.18.2 only)
@@ -90,6 +91,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
         if(!setupEconomy()){
             Bukkit.getLogger().severe("You need to add Vault to your server.");
         }
+        isPlaceholderAPIEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
     }
    
     public void onDisable(){
@@ -489,7 +491,8 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
             s = s.replace(replacer, numberFormatter(getConfig().getDouble("Min_Amount")));
         }
         
-        s = PlaceholderAPI.setPlaceholders(p, s);
+        if(isPlaceholderAPIEnabled)
+        	s = PlaceholderAPIImplementation.insertPlaceholders(p, s);
         
         return s;
     }
