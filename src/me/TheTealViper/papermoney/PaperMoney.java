@@ -290,7 +290,49 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                         explain = true;
                     }
                 }else if(args.length == 3){
-                    if(args[0].equalsIgnoreCase("take")){
+                	if(args[0].equalsIgnoreCase("make")){
+                        if(p.hasPermission("papermoney.make.others")){
+                        	if(!Bukkit.getOfflinePlayer(args[2]).isOnline()){
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Player_Offline_Warning"), p, -1)));
+                                return false;
+                            }
+                        	Player oP = Bukkit.getPlayer(args[2]);
+                        	if(!args[1].matches("^[0-9,.]+$")){
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_MakeForAnother_Explain"), p, -1)));
+                                return false;
+                            }
+                            if(oP.getInventory().firstEmpty() == -1){
+                                p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Full_Inventory_Warning"), p, -1)));
+                                return false;
+                            }
+                            if(Double.valueOf(args[1]) < getConfig().getDouble("Min_Amount")) {
+                            	p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Value_Must_Meet_Minimum_Warning"), p, Double.valueOf(args[1]))));
+                            	return false;
+                            }
+                           
+                            while(args[1].contains(",")){
+                                args[1] = args[1].replace(",", "");
+                            }
+                            ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemMeta meta = item.getItemMeta();
+                            NamespacedKey key = new NamespacedKey(this, "value");
+                            meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
+                            meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), p, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")))));
+                            List<String> lore = getConfig().getStringList("Item_Lore");
+                            if(lore != null){
+                                int i = 0;
+                                for(String s : lore){
+                                    s = makeColors(formatWithSyntax(s, p, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places"))));
+                                    lore.set(i, s);
+                                    i++;
+                                }
+                                meta.setLore(lore);
+                            }
+                            item.setItemMeta(meta);
+                            oP.getInventory().addItem(item);
+                        } else
+                        	perms = true;
+                    }else if(args[0].equalsIgnoreCase("take")){
                         if(p.hasPermission("papermoney.take.others")){
                             if(!Bukkit.getOfflinePlayer(args[2]).isOnline()){
                                 p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Player_Offline_Warning"), p, -1)));
@@ -365,10 +407,12 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                     p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Take_Explain"), p, -1)));
                 if(p.hasPermission("papermoney.split") && getConfig().getBoolean("Enable_Money_Splitting"))
                 	p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Split_Explain"), p, -1)));
-                if(p.hasPermission("papermoney.make") || p.hasPermission("papermoney.take.others") || p.hasPermission("papermoney.reload"))
-                    p.sendMessage(prefix + "Staff Commands:");
+                if(p.hasPermission("papermoney.make") || p.hasPermission("papermoney.make.others") || p.hasPermission("papermoney.take.others") || p.hasPermission("papermoney.reload"))
+                    p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Staff_Command_Title"), p, -1)));
                 if(p.hasPermission("papermoney.make"))
                     p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Make_Explain"), p, -1)));
+                if(p.hasPermission("papermoney.make.others"))
+                    p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_MakeForAnother_Explain"), p, -1)));
                 if(p.hasPermission("papermoney.take.others"))
                     p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_TakeFromAnother_Explain"), p, -1)));
                 if(p.hasPermission("papermoney.reload"))
@@ -376,6 +420,59 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
             }
             if(perms){
                 p.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Missing_Permissions"), p, -1)));
+            }
+        } else {
+            boolean explain = false;
+        	if(args.length == 3){
+            	if(args[0].equalsIgnoreCase("make")){
+//                    if(p.hasPermission("papermoney.make.others")){
+                    	if(!Bukkit.getOfflinePlayer(args[2]).isOnline()){
+                            sender.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Player_Offline_Warning"), null, -1)));
+                            return false;
+                        }
+                    	Player oP = Bukkit.getPlayer(args[2]);
+                    	if(!args[1].matches("^[0-9,.]+$")){
+                            sender.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_MakeForAnother_Explain"), null, -1)));
+                            return false;
+                        }
+                        if(oP.getInventory().firstEmpty() == -1){
+                            sender.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Full_Inventory_Warning"), null, -1)));
+                            return false;
+                        }
+                        if(Double.valueOf(args[1]) < getConfig().getDouble("Min_Amount")) {
+                        	sender.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Value_Must_Meet_Minimum_Warning"), null, Double.valueOf(args[1]))));
+                        	return false;
+                        }
+                       
+                        while(args[1].contains(",")){
+                            args[1] = args[1].replace(",", "");
+                        }
+                        ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                        ItemMeta meta = item.getItemMeta();
+                        NamespacedKey key = new NamespacedKey(this, "value");
+                        meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
+                        meta.setDisplayName(makeColors(formatWithSyntax(getConfig().getString("Item_Name"), null, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")))));
+                        List<String> lore = getConfig().getStringList("Item_Lore");
+                        if(lore != null){
+                            int i = 0;
+                            for(String s : lore){
+                                s = makeColors(formatWithSyntax(s, null, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places"))));
+                                lore.set(i, s);
+                                i++;
+                            }
+                            meta.setLore(lore);
+                        }
+                        item.setItemMeta(meta);
+                        Bukkit.getPlayer(args[2]).getInventory().addItem(item);
+//                    } else
+//                    	perms = true;
+                }
+        	} else {
+        		explain = true;
+        	}
+        	if(explain){
+        		sender.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_Staff_Command_Title"), null, -1)));
+                sender.sendMessage(makeColors(formatWithSyntax(MESSAGES.getString("PMoney_MakeForAnother_Explain"), null, -1)));
             }
         }
         return false;
@@ -491,8 +588,12 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
             s = s.replace(replacer, numberFormatter(getConfig().getDouble("Min_Amount")));
         }
         
-        if(isPlaceholderAPIEnabled)
-        	s = PlaceholderAPIImplementation.insertPlaceholders(p, s);
+        if(isPlaceholderAPIEnabled) {
+        	if(p != null)
+        		s = PlaceholderAPIImplementation.insertPlaceholders(p, s);
+        	else
+        		s = PlaceholderAPIImplementation.insertPlaceholders(Bukkit.getOfflinePlayer("Server"), s);
+        }
         
         return s;
     }

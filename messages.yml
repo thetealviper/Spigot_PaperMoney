@@ -2,6 +2,7 @@ Prefix: "&b[&lPM&r&b]&r"
 Help: "&r&7"
 
 PMoney_Make_Explain: "%pm_prefix%/pmoney make (amount) %pm_help%- Makes a note with a certain value."
+PMoney_MakeForAnother_Explain: "%pm_prefix%/pmoney make (amount) (playerName) %pm_help%- Makes a note with a certain value for another player."
 PMoney_Take_Explain: "%pm_prefix%/pmoney take (amount) %pm_help%- Turns money from your bank into a note."
 PMoney_TakeFromAnother_Explain: "%pm_prefix%/pmoney take (amount) (playerName) %pm_help%- Turns money from another's bank into a note."
 PMoney_Reload_Explain: "%pm_prefix%/pmoney reload %pm_help%- Reloads configs."

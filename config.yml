@@ -67,7 +67,7 @@ Item:
 Item_Name: "&a$&6%pm_bill_worth%"
 Item_Lore:
   - "&rA PaperMoney note."
-  - "Made by: %player_displayname%"
+  - "Made by: %changeoutput_equals_{player_displayname}__{player_name}_{player_displayname}%"
   
 #Syntax
 # %pm_bill_worth% --> The amount that a bill is worth
@@ -81,6 +81,9 @@ Item_Lore:
 
 # papermoney.make
 #Allows players to run the /pmoney make command.
+
+# papermoney.make.others
+#Allows players to run the /pmoney make (playerName) command.
 
 # papermoney.take
 #Allows players to run the /pmoney take command.
@@ -98,5 +101,5 @@ Item_Lore:
 #                        Version                         #
 ##########################################################
 
-VERSION: 5
+VERSION: 6
 #Do not touch this. No touchy.
