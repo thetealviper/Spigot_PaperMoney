@@ -11,10 +11,9 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Item;
 import org.bukkit.persistence.PersistentDataType;
 
-import com.gmail.filoghost.holographicdisplays.api.Hologram;
-import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
-
 import me.TheTealViper.papermoney.PaperMoney;
+import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
+import me.filoghost.holographicdisplays.api.hologram.Hologram;
 
 public class HolographicDisplaysImplementation {
 	public static PaperMoney plugin = null;
@@ -61,8 +60,8 @@ public class HolographicDisplaysImplementation {
 			return;
 		
 		Hologram holo = holographDatabase.get(item.getUniqueId());
-		holo.clearLines();
-		holo.appendTextLine(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*newStackSize));
+		holo.getLines().clear();
+		holo.getLines().appendText(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*newStackSize));
 	}
 	
 	public static void handleTick(UUID entityUuid){
@@ -74,8 +73,9 @@ public class HolographicDisplaysImplementation {
 			if(plugin.getServer().getEntity(item.getUniqueId()) == null) {
 				return;
 			}
-			Hologram holo = HologramsAPI.createHologram(plugin, plugin.getServer().getEntity(item.getUniqueId()).getLocation().clone().add(0, 1, 0));
-			holo.appendTextLine(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount()));
+			HolographicDisplaysAPI HDAPI = HolographicDisplaysAPI.get(plugin);
+			final Hologram holo = HDAPI.createHologram(plugin.getServer().getEntity(item.getUniqueId()).getLocation().clone().add(0, 1, 0));
+			holo.getLines().appendText(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount()));
 			holographDatabase.put(item.getUniqueId(), holo);
 		}else{
 			if(plugin.getServer().getEntity(item.getUniqueId()) == null) {
@@ -84,7 +84,7 @@ public class HolographicDisplaysImplementation {
 			}
 			else {
 				Hologram holo = holographDatabase.get(item.getUniqueId());
-				holo.teleport(item.getLocation().clone().add(0, 1, 0));
+				holo.setPosition(item.getLocation().clone().add(0, 1, 0));
 			}
 		}
 	}

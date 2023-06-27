@@ -57,9 +57,6 @@ Item:
 #- protectionfall
 #- protectionfire
 #- silktouch
-#effects - Format is 'EFFECT:LEVEL:TIME (seconds)'.This is the effects that a player will receive upon eating a certain food. Must follow multiple line structure. Optional.
-#        - Effect names can be found at
-#        - https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/potion/PotionEffectType.html
 #tags - Used to make some custom item attributes. All these are optional.
 #- vanilladurability:DURABILITY
 #- custommodeldata:SevenDigitNumber
@@ -67,7 +64,7 @@ Item:
 Item_Name: "&a$&6%pm_bill_worth%"
 Item_Lore:
   - "&rA PaperMoney note."
-  - "Made by: %changeoutput_equals_{player_displayname}__{player_name}_{player_displayname}%"
+  - "Made by: %player_displayname"
   
 #Syntax
 # %pm_bill_worth% --> The amount that a bill is worth
@@ -101,5 +98,5 @@ Item_Lore:
 #                        Version                         #
 ##########################################################
 
-VERSION: 6
+VERSION: 7
 #Do not touch this. No touchy.

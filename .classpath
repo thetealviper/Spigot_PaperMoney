@@ -6,17 +6,14 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/PlaceholderAPI-2.10.4.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18 Plugin Tester/bundler/libraries/bungeecord-chat-1.16-R0.4.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18 Plugin Tester/bundler/libraries/commons-codec-1.11.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18 Plugin Tester/bundler/libraries/commons-io-2.11.0.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18 Plugin Tester/bundler/libraries/commons-lang-2.6.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18 Plugin Tester/bundler/libraries/commons-lang3-3.12.0.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/DecentHolograms-2.3.0.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18 Plugin Tester/bundler/libraries/gson-2.8.8.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/HolographicDisplays-2.4.1-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18.2 Plugin Tester/bundler/libraries/spigot-api-1.18.2-R0.1-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18 Plugin Tester/plugins/Vault-1.7.2.jar"/>
-	<classpathentry kind="lib" path="D:/My Documents/Minecraft Stuff/1.18.2 Plugin Tester/bundler/libraries/json-simple-1.1.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/1.20.1 Server/bundler/libraries/bungeecord-chat-1.16-R0.4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/1.20.1 Server/bundler/libraries/commons-codec-1.11.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/1.20.1 Server/bundler/libraries/commons-io-2.11.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/1.20.1 Server/bundler/libraries/gson-2.10.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/1.20.1 Server/bundler/libraries/spigot-api-1.20.1-R0.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/DecentHolograms-2.8.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/HolographicDisplays-3.0.3-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/PlaceholderAPI-2.11.3-DEV-160.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Aaron/Documents/Minecraft Stuff/Vault.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
