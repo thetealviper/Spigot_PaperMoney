@@ -598,7 +598,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
         return s;
     }
     
-    private Double roundToSigFigs(double number, int decimalPlaces) {
+    public Double roundToSigFigs(double number, int decimalPlaces) {
     	return Math.floor(number * Math.pow(10, decimalPlaces))/Math.pow(10, decimalPlaces);
     }
    
@@ -609,26 +609,17 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
 		//return String.format("%. "+getConfig().getInt("Maximum_Decimal_Places")+"d", String.valueOf(worth));
 	}
     
+    public String getRoundedAndFormattedDecimal(double value) {
+    	value = roundToSigFigs(value, getConfig().getInt("Maximum_Decimal_Places"));
+    	return getStringFormattedDecimal(value);
+    }
+    
+    //I honestly don't remember why I use this
     private String numberFormatter(double number){
         NumberFormat myFormat = NumberFormat.getInstance();
         myFormat.setGroupingUsed(true);
         return myFormat.format(number);
     }
-   
-//  private void copy(InputStream in, File file) {
-//      try {
-//          OutputStream out = new FileOutputStream(file);
-//          byte[] buf = new byte[1024];
-//          int len;
-//          while((len=in.read(buf))>0){
-//              out.write(buf,0,len);
-//          }
-//          out.close();
-//          in.close();
-//      } catch (Exception e) {
-//          e.printStackTrace();
-//      }
-//  }
     
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {

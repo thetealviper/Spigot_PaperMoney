@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Item;
@@ -63,7 +62,8 @@ public class DecentHologramsImplementation {
 			return;
 		
 		Hologram holo = holographDatabase.get(item.getUniqueId());
-		DHAPI.setHologramLines(holo, Arrays.asList(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*newStackSize)));
+//		DHAPI.setHologramLines(holo, Arrays.asList(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*newStackSize)));
+		DHAPI.setHologramLines(holo, Arrays.asList(PaperMoney.makeColors(plugin.formatWithSyntax(plugin.getConfig().getString("Item_Name"), null, plugin.roundToSigFigs(plugin.amountMap.get(item.getUniqueId())*newStackSize, plugin.getConfig().getInt("Maximum_Decimal_Places"))))));
 //		holo.clearLines();
 //		holo.appendTextLine(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*newStackSize));
 	}
@@ -78,7 +78,8 @@ public class DecentHologramsImplementation {
 				return;
 			}
 			Hologram holo = DHAPI.createHologram(UUID.randomUUID().toString(), plugin.getServer().getEntity(item.getUniqueId()).getLocation().clone().add(0, 1, 0));
-			DHAPI.setHologramLines(holo, Arrays.asList(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount())));
+//			DHAPI.setHologramLines(holo, Arrays.asList(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount())));
+			DHAPI.setHologramLines(holo, Arrays.asList(PaperMoney.makeColors(plugin.formatWithSyntax(plugin.getConfig().getString("Item_Name"), null, plugin.roundToSigFigs(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount(), plugin.getConfig().getInt("Maximum_Decimal_Places"))))));
 //			Hologram holo = DHAPI.createHologram(plugin, plugin.getServer().getEntity(item.getUniqueId()).getLocation().clone().add(0, 1, 0));
 //			holo.appendTextLine(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount()));
 			holographDatabase.put(item.getUniqueId(), holo);

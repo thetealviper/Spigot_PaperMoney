@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Item;
@@ -61,7 +60,8 @@ public class HolographicDisplaysImplementation {
 		
 		Hologram holo = holographDatabase.get(item.getUniqueId());
 		holo.getLines().clear();
-		holo.getLines().appendText(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*newStackSize));
+//		holo.getLines().appendText(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*newStackSize));
+		holo.getLines().appendText(PaperMoney.makeColors(plugin.formatWithSyntax(plugin.getConfig().getString("Item_Name"), null, plugin.roundToSigFigs(plugin.amountMap.get(item.getUniqueId())*newStackSize, plugin.getConfig().getInt("Maximum_Decimal_Places")))));
 	}
 	
 	public static void handleTick(UUID entityUuid){
@@ -75,7 +75,8 @@ public class HolographicDisplaysImplementation {
 			}
 			HolographicDisplaysAPI HDAPI = HolographicDisplaysAPI.get(plugin);
 			final Hologram holo = HDAPI.createHologram(plugin.getServer().getEntity(item.getUniqueId()).getLocation().clone().add(0, 1, 0));
-			holo.getLines().appendText(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount()));
+//			holo.getLines().appendText(ChatColor.GREEN + "$" + ChatColor.GOLD + plugin.getStringFormattedDecimal(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount()));
+			holo.getLines().appendText(PaperMoney.makeColors(plugin.formatWithSyntax(plugin.getConfig().getString("Item_Name"), null, plugin.roundToSigFigs(plugin.amountMap.get(item.getUniqueId())*item.getItemStack().getAmount(), plugin.getConfig().getInt("Maximum_Decimal_Places")))));
 			holographDatabase.put(item.getUniqueId(), holo);
 		}else{
 			if(plugin.getServer().getEntity(item.getUniqueId()) == null) {

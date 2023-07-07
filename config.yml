@@ -64,7 +64,7 @@ Item:
 Item_Name: "&a$&6%pm_bill_worth%"
 Item_Lore:
   - "&rA PaperMoney note."
-  - "Made by: %player_displayname"
+  - "Made by: %player_displayname%"
   
 #Syntax
 # %pm_bill_worth% --> The amount that a bill is worth
