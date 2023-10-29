@@ -73,6 +73,7 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 	 *  - "custommodeldata:1234567"
 	 *  - "damage:100" //Enhanced Only
 	 *  - "forcestack:100" //Enhanced Only
+	 *  - "fakeenchant:true" //Adds enchant glow to item without any enchantments
 	 * flags:
 	 *  - "HIDE_ATTRIBUTES"
 	 *  - "HIDE_DESTROYS"
@@ -230,6 +231,9 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 					case "custommodeldata":
 						meta.setCustomModelData(Integer.valueOf(value));
 						break;
+					case "fakeenchant":
+						ItemstackUtils.addEnchantmentGlow(meta);
+						break;
 				}
 			}
 			modifiedMetaSoApply = true;
@@ -246,25 +250,25 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 		//The below order is important so the item put in the databases is the actual key item
 		if(modifiedMetaSoApply) item.setItemMeta(meta);
 		//Handle enhanced tags
-			if(sec.contains("tags")) {
-				for(String tagString : sec.getStringList("tags")) {
-					String[] tagStringProcessed = tagString.split(":");
-					String tag = tagStringProcessed[0];
-					String value = tagStringProcessed[1];
-					switch(tag) {
-						case "damage":
-							meta = item.getItemMeta();
-                            meta.getPersistentDataContainer().set(KEY_DAMAGE, PersistentDataType.DOUBLE, Double.valueOf(value));
-							item.setItemMeta(meta);
-							break;
-						case "forcestack":
-							meta = item.getItemMeta();
-                            meta.getPersistentDataContainer().set(KEY_FORCESTACK, PersistentDataType.INTEGER, Integer.valueOf(value));
-							item.setItemMeta(meta);
-							break;
-					}
+		if(sec.contains("tags")) {
+			for(String tagString : sec.getStringList("tags")) {
+				String[] tagStringProcessed = tagString.split(":");
+				String tag = tagStringProcessed[0];
+				String value = tagStringProcessed[1];
+				switch(tag) {
+					case "damage":
+						meta = item.getItemMeta();
+                        meta.getPersistentDataContainer().set(KEY_DAMAGE, PersistentDataType.DOUBLE, Double.valueOf(value));
+						item.setItemMeta(meta);
+						break;
+					case "forcestack":
+						meta = item.getItemMeta();
+                        meta.getPersistentDataContainer().set(KEY_FORCESTACK, PersistentDataType.INTEGER, Integer.valueOf(value));
+						item.setItemMeta(meta);
+						break;
 				}
 			}
+		}
 		return item;
 	}
 	

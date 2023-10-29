@@ -42,6 +42,7 @@ import me.TheTealViper.papermoney.implementations.DecentHologramsImplementation;
 import me.TheTealViper.papermoney.implementations.HolographicDisplaysImplementation;
 import me.TheTealViper.papermoney.implementations.PlaceholderAPIImplementation;
 import me.TheTealViper.papermoney.implementations.hologramPrototype;
+import me.TheTealViper.papermoney.util.ItemstackUtils;
 import me.TheTealViper.papermoney.util.PluginFile;
 import me.TheTealViper.papermoney.util.UtilityEquippedJavaPlugin;
 import net.milkbowl.vault.economy.Economy;
@@ -92,6 +93,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
             Bukkit.getLogger().severe("You need to add Vault to your server.");
         }
         isPlaceholderAPIEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
+        ItemstackUtils.RegisterGlowEnchant(this);
     }
    
     public void onDisable(){

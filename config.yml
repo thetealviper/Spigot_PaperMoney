@@ -3,7 +3,7 @@
 ##########################################################
 Prefix: "&b(&lPaperMoney&r&b)&r"
 
-Enable_Money_Splitting: false
+Enable_Money_Splitting: true
 #Set this to true to allow players to turn larger bills into smaller bills
 #THIS IS LITERALLY A PAPER DUPE. WARNING. THIS, BY DEFINITION, IS A PAPER DUPE.
 #Enable this with care and don't say I didn't warn you.
@@ -39,29 +39,46 @@ Drop_All_On_Death: false
 Item:
  id: PAPER
  amount: 1
-#id - Case sensitive material name. Not optional to include.
-#amount - This is the size of the item stack. Optional.
-#enchantments - Format is 'ENCHANTMENT:LEVEL'. Optional.
-#- arrowdamage
-#- arrowfire
-#- arrowinfinite
-#- arrowknockback
-#- damage
-#- digspeed
-#- durability
-#- fireaspect
-#- knockback
-#- lootbonusblock
-#- lootbonusmob
-#- luck
-#- protectionfall
-#- protectionfire
-#- silktouch
-#tags - Used to make some custom item attributes. All these are optional.
-#- vanilladurability:DURABILITY
-#- custommodeldata:SevenDigitNumber
+# id: DIRT
+# amount: 1
+# enchantments:
+#  - "arrowdamage:1"
+#  - "arrowfire:1"
+#  - "arrowinfinite:1"
+#  - "arrowknockback:1"
+#  - "damage:1"
+#  - "digspeed:1"
+#  - "durability:1"
+#  - "fireaspect:1"
+#  - "knockback:1"
+#  - "lootbonusblock:1"
+#  - "lootbonusmob:1"
+#  - "luck:1"
+#  - "protectionfall:1"
+#  - "protectionfire:1"
+#  - "silktouch:1"
+# tags:
+#  - "textureskull:SKINVALUE"
+#  - "playerskull:PLAYERNAME"
+#  - "vanilladurability:256"
+#  - "unbreakable:true"
+#  - "custommodeldata:1234567"
+#  - "fakeenchant:true" //Adds enchant glow to item without any enchantments
+# flags:
+#  - "HIDE_ATTRIBUTES"
+#  - "HIDE_DESTROYS"
+#  - "HIDE_ENCHANTS"
+#  - "HIDE_PLACED_ON"
+#  - "HIDE_POTION_EFFECTS"
+#  - "HIDE_UNBREAKABLE"
+# attributes:
+#  - "ATTRIBUTE:VALUE:OPERATION"
+#  - "ATTRIBUTE:VALUE:OPERATION:SLOT"
+#  - ATTRIBUTE NAMES FOUND @ https://hub.spigotmc.org/javadocs/spigot/org/bukkit/attribute/Attribute.html 
+#  - ATTRIBUTE OPERATIONS FOUND @ https://hub.spigotmc.org/javadocs/spigot/org/bukkit/attribute/AttributeModifier.Operation.html
+#  - ATTRIBUTE SLOTS FOUND @ https://hub.spigotmc.org/javadocs/spigot/org/bukkit/inventory/EquipmentSlot.html
 
-Item_Name: "&a$&6%pm_bill_worth%"
+Item_Name: "&a₱&6%pm_bill_worth%"
 Item_Lore:
   - "&rA PaperMoney note."
   - "Made by: %player_displayname%"
@@ -98,5 +115,5 @@ Item_Lore:
 #                        Version                         #
 ##########################################################
 
-VERSION: 7
+VERSION: 8
 #Do not touch this. No touchy.
