@@ -3,15 +3,17 @@ package me.TheTealViper.papermoney.util;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.apache.commons.codec.binary.Base64;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
@@ -20,28 +22,23 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 public class LoadEnhancedItemstackFromConfig implements Listener{
-	private UtilityEquippedJavaPlugin plugin = null;
-	public NamespacedKey KEY_VALUE, KEY_DAMAGE, KEY_FORCESTACK;
+	public Map<String, ItemStack> enhancedItemInfo = new HashMap<String, ItemStack>();
+	public Map<ItemStack, Integer> damageInfo = new HashMap<ItemStack, Integer>();
+	public Map<ItemStack, Integer> forceStackInfo = new HashMap<ItemStack, Integer>();
 	
 	//TODO
-		//- Make stacksize work
-		//- Make isSimilar() check persistentinfo
 		//- Custom durability
-		//- placeholder support (custom+placeholderapi)
+		//- Custom skull w/ continuous UUID
 	
 	/**
 	 * id: DIRT
@@ -51,28 +48,57 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 	 *  - "1"
 	 *  - "2"
 	 * enchantments:
-	 * 	- "arrowdamage:1"
-	 *  - "arrowfire:1"
-	 *  - "arrowinfinite:1"
-	 *  - "arrowknockback:1"
-	 *  - "damage:1"
-	 *  - "digspeed:1"
-	 *  - "durability:1"
+	 *  - UPDATED ENCHANTMENT LIST FOUND @ https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/enchantments/Enchantment.html
+	 * 	- "aquaaffinity:1"
+	 *  - "baneofarthropods:1"
+	 *  - "blastprotection:1"
+	 *  - "channeling:1"
+	 *  - "cleaving:1"
+	 *  - "curseofbinding:1"
+	 *  - "curseofvanishing:1"
+	 *  - "depthstrider:1"
+	 *  - "efficiency:1"
+	 *  - "featherfalling:1"
 	 *  - "fireaspect:1"
+	 *  - "fireprotection:1"
+	 *  - "flame:1"
+	 *  - "fortune:1"
+	 *  - "frostwalker:1"
+	 * 	- "impaling:1"
+	 *  - "infinity:1"
 	 *  - "knockback:1"
-	 *  - "lootbonusblock:1"
-	 *  - "lootbonusmob:1"
-	 *  - "luck:1"
-	 *  - "protectionfall:1"
-	 *  - "protectionfire:1"
+	 *  - "looting:1"
+	 *  - "loyalty:1"
+	 *  - "luckofthesea:1"
+	 *  - "lure:1"
+	 *  - "mending:1"
+	 *  - "multishot:1"
+	 *  - "piercing:1"
+	 *  - "power:1"
+	 *  - "projectileprotection:1"
+	 *  - "protection:1"
+	 *  - "punch:1"
+	 *  - "quickcharge:1"
+	 * 	- "respiration:1"
+	 *  - "riptide:1"
+	 *  - "sharpness:1"
 	 *  - "silktouch:1"
+	 *  - "smite:1"
+	 *  - "soulspeed:1"
+	 *  - "sweepingedge:1"
+	 *  - "swiftsneak:1"
+	 *  - "thorns:1"
+	 *  - "unbreaking:1"
+	 *  - "windburst:1"
 	 * tags:
-	 *  - "playerskullskin:SKINVALUE" //Do note that skulls will NOT stack properly or be considered "similar" because different UUID. Use Enhanced for UUID tracking.
+	 *  - "textureskull:SKINVALUE"
+	 *  - "playerskull:PLAYERNAME"
 	 *  - "vanilladurability:256"
 	 *  - "unbreakable:true"
 	 *  - "custommodeldata:1234567"
-	 *  - "damage:100" //Enhanced Only
-	 *  - "forcestack:100" //Enhanced Only
+	 *  - "enchantglow:true"
+	 *  - "damage:20" //WIP
+	 *  - "forcestack:5" //WIP
 	 * flags:
 	 *  - "HIDE_ATTRIBUTES"
 	 *  - "HIDE_DESTROYS"
@@ -80,36 +106,23 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 	 *  - "HIDE_PLACED_ON"
 	 *  - "HIDE_POTION_EFFECTS"
 	 *  - "HIDE_UNBREAKABLE"
+	 * attributes:
+	 *  - "ATTRIBUTE:VALUE:OPERATION"
+	 *  - "ATTRIBUTE:VALUE:OPERATION:SLOT"
+	 *  - ATTRIBUTE NAMES FOUND @ https://hub.spigotmc.org/javadocs/spigot/org/bukkit/attribute/Attribute.html 
+	 *  - ATTRIBUTE OPERATIONS FOUND @ https://hub.spigotmc.org/javadocs/spigot/org/bukkit/attribute/AttributeModifier.Operation.html
+	 *  - ATTRIBUTE SLOTS FOUND @ https://hub.spigotmc.org/javadocs/spigot/org/bukkit/inventory/EquipmentSlot.html
 	 */
 	
 	public LoadEnhancedItemstackFromConfig(UtilityEquippedJavaPlugin plugin){
-		this.plugin = plugin;
-		KEY_VALUE = new NamespacedKey(plugin, "value");
-		KEY_DAMAGE = new NamespacedKey(plugin, "damage");
-		KEY_FORCESTACK = new NamespacedKey(plugin, "forcestack");
-		
-		//Register packet listener to handle some max stack size things
-//		ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(plugin, PacketType.Play.Server.SET_SLOT) {
-//            @Override
-//            public void onPacketSending(PacketEvent event) {
-//            	PacketContainer packet = event.getPacket();
-//            	StructureModifier<ItemStack> itemStructureModifier = packet.getItemModifier();
-//            	ItemStack item = itemStructureModifier.read(0);
-//        		if(item == null || !item.hasItemMeta() || !item.getItemMeta().getPersistentDataContainer().has(KEY_FORCESTACK, PersistentDataType.INTEGER))
-//        			return;
-//        		
-//        		if(item.getAmount() > item.getItemMeta().getPersistentDataContainer().get(KEY_FORCESTACK, PersistentDataType.INTEGER)) {
-//        			//Trigger a necessary inventory cleanup
-//        			ItemStack clone = item.clone();
-//        			clone.setAmount(1); //Set amount to 0 so we don't actually add anything, just cleanup what's there
-//        			cleanInventoryOfItem(event.getPlayer(), event.getPlayer().getOpenInventory().getTopInventory(), clone);
-//        			cleanInventoryOfItem(event.getPlayer(), event.getPlayer().getOpenInventory().getBottomInventory(), clone);
-//        		}
-//            }
-//        });
+	}
+
+	public ItemStack getItem(String key) {
+		return enhancedItemInfo.get(key).clone();
 	}
 	
-	public ItemStack getItem(ConfigurationSection sec) {
+	@SuppressWarnings("deprecation")
+	public ItemStack loadItem(String key, ConfigurationSection sec) {
 		//Null check
 		if(sec == null)
 			return null;
@@ -126,14 +139,17 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 		if(sec.contains("amount")) item.setAmount(sec.getInt("amount"));
 		
 		//Handle name
-		if(sec.contains("name")) {meta.setDisplayName(plugin.getStringUtils().makeColors(sec.getString("name"))); modifiedMetaSoApply = true;}
+		if(sec.contains("name")) {
+			meta.setDisplayName(StringUtils.makeColors(sec.getString("name")));
+			modifiedMetaSoApply = true;
+		}
 		
 		//Handle lore
 		if(sec.contains("lore")) {
 			List<String> dummy = sec.getStringList("lore");
 			List<String> lore = new ArrayList<String>();
 			for(String s : dummy) {
-				lore.add(plugin.getStringUtils().makeColors(s));
+				lore.add(StringUtils.makeColors(s));
 			}
 			meta.setLore(lore);
 			modifiedMetaSoApply = true;
@@ -143,54 +159,16 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 		if(sec.contains("enchantments")) {
 			List<String> enchantmentStrings = sec.getStringList("enchantments");
 			for(String enchantmentString : enchantmentStrings) {
-				String enchantmentName = enchantmentString.split(":")[0];
+				String enchantmentName = enchantmentString.split(":")[0].replaceAll(" ", "").replaceAll("_", "").toLowerCase();
 				int enchantmentLevel = Integer.valueOf(enchantmentString.split(":")[1]);
-				switch(enchantmentName) {
-					case "arrowdamage":
-						meta.addEnchant(Enchantment.ARROW_DAMAGE, enchantmentLevel, true);
+				//Loop through enchantments, see if name matches, apply if does
+				for (Enchantment ench : Enchantment.values()) {
+					String enchantmentNameParsed = ench.toString().split(":")[1];
+					enchantmentNameParsed = enchantmentNameParsed.substring(0, enchantmentNameParsed.length()-1);
+					if (enchantmentNameParsed.replaceAll(" ", "").replaceAll("_", "").toLowerCase().equals(enchantmentName)) {
+						meta.addEnchant(ench, enchantmentLevel, true);
 						break;
-					case "arrowfire":
-						meta.addEnchant(Enchantment.ARROW_FIRE, enchantmentLevel, true);
-						break;
-					case "arrowinfinite":
-						meta.addEnchant(Enchantment.ARROW_INFINITE, enchantmentLevel, true);
-						break;
-					case "arrowknockback":
-						meta.addEnchant(Enchantment.ARROW_KNOCKBACK, enchantmentLevel, true);
-						break;
-					case "damage":
-						meta.addEnchant(Enchantment.DAMAGE_ALL, enchantmentLevel, true);
-						break;
-					case "digspeed":
-						meta.addEnchant(Enchantment.DIG_SPEED, enchantmentLevel, true);
-						break;
-					case "durability":
-						meta.addEnchant(Enchantment.DURABILITY, enchantmentLevel, true);
-						break;
-					case "fireaspect":
-						meta.addEnchant(Enchantment.FIRE_ASPECT, enchantmentLevel, true);
-						break;
-					case "knockback":
-						meta.addEnchant(Enchantment.KNOCKBACK, enchantmentLevel, true);
-						break;
-					case "lootbonusblock":
-						meta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, enchantmentLevel, true);
-						break;
-					case "lootbonusmob":
-						meta.addEnchant(Enchantment.LOOT_BONUS_MOBS, enchantmentLevel, true);
-						break;
-					case "luck":
-						meta.addEnchant(Enchantment.LUCK, enchantmentLevel, true);
-						break;
-					case "protectionfall":
-						meta.addEnchant(Enchantment.PROTECTION_FALL, enchantmentLevel, true);
-						break;
-					case "protectionfire":
-						meta.addEnchant(Enchantment.PROTECTION_FALL, enchantmentLevel, true);
-						break;
-					case "silktouch":
-						meta.addEnchant(Enchantment.SILK_TOUCH, enchantmentLevel, true);
-						break;
+					}
 				}
 			}
 			modifiedMetaSoApply = true;
@@ -203,21 +181,24 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 				String tag = tagStringProcessed[0];
 				String value = tagStringProcessed[1];
 				switch(tag) {
-					case "playerskullskin":
-						JsonObject o = new JsonParser().parse(new String(Base64.decodeBase64(value))).getAsJsonObject();
-						String skinUrl = o.get("textures").getAsJsonObject().get("SKIN").getAsJsonObject().get("url").getAsString();
-						SkullMeta skullMeta = (SkullMeta) meta;
-						PlayerProfile profile = Bukkit.createPlayerProfile(UUID.nameUUIDFromBytes(skinUrl.getBytes()));
-						PlayerTextures textures = profile.getTextures();
-						try {
-							textures.setSkin(new URL(skinUrl));
+					case "textureskull":
+					    SkullMeta skullMeta = (SkullMeta) meta;
+				        PlayerProfile pp = Bukkit.createPlayerProfile(UUID.fromString("9c1917c9-95e1-4042-8f9c-f5cc653d266b")); //Random UUID representing heads made from this plugin.
+				        PlayerTextures pt = pp.getTextures();
+				        try {
+							pt.setSkin(new URL("http://textures.minecraft.net/texture/" + value));
 						} catch (MalformedURLException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					    profile.setTextures(textures);
-					    skullMeta.setOwnerProfile(profile);
+				        pp.setTextures(pt);
+				        skullMeta.setOwnerProfile(pp);
 					    meta = skullMeta;
+						break;
+					case "playerskull":
+						SkullMeta skullMeta2 = (SkullMeta) meta;
+				        skullMeta2.setOwningPlayer(Bukkit.getOfflinePlayer(value));
+					    meta = skullMeta2;
 						break;
 					case "vanilladurability":
 						Damageable dam = (Damageable) meta;
@@ -229,6 +210,9 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 						break;
 					case "custommodeldata":
 						meta.setCustomModelData(Integer.valueOf(value));
+						break;
+					case "enchantglow":
+						meta.setEnchantmentGlintOverride(true);
 						break;
 				}
 			}
@@ -243,28 +227,42 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 			modifiedMetaSoApply = true;
 		}
 		
-		//The below order is important so the item put in the databases is the actual key item
-		if(modifiedMetaSoApply) item.setItemMeta(meta);
-		//Handle enhanced tags
-		if(sec.contains("tags")) {
-			for(String tagString : sec.getStringList("tags")) {
-				String[] tagStringProcessed = tagString.split(":");
-				String tag = tagStringProcessed[0];
-				String value = tagStringProcessed[1];
-				switch(tag) {
-					case "damage":
-						meta = item.getItemMeta();
-                        meta.getPersistentDataContainer().set(KEY_DAMAGE, PersistentDataType.DOUBLE, Double.valueOf(value));
-						item.setItemMeta(meta);
-						break;
-					case "forcestack":
-						meta = item.getItemMeta();
-                        meta.getPersistentDataContainer().set(KEY_FORCESTACK, PersistentDataType.INTEGER, Integer.valueOf(value));
-						item.setItemMeta(meta);
-						break;
+		//Handle vanilla attributes
+		if(sec.contains("attributes")){
+			for(String s : sec.getStringList("attributes")){
+				String[] args = s.split(":");
+				if(args.length == 3) {
+					meta.addAttributeModifier(Attribute.valueOf(args[0].toUpperCase()), new AttributeModifier("test", Double.valueOf(args[1]), Operation.valueOf(args[2].toUpperCase())));
+				}else if(args.length == 4) {
+					for(String slot : args[3].split(",")) {
+						meta.addAttributeModifier(Attribute.valueOf(args[0].toUpperCase()), new AttributeModifier(UUID.randomUUID(), "test", Double.valueOf(args[1]), Operation.valueOf(args[2].toUpperCase()), EquipmentSlot.valueOf(slot.toUpperCase())));
+					}
+				}else {
+					//User messed up formatting
 				}
 			}
+			modifiedMetaSoApply = true;
 		}
+		
+		//The below order is important so the item put in the databases is the actual key item
+		if(modifiedMetaSoApply) item.setItemMeta(meta);
+		enhancedItemInfo.put(key, item.clone());
+		//Handle enhanced tags
+				if(sec.contains("tags")) {
+					for(String tagString : sec.getStringList("tags")) {
+						String[] tagStringProcessed = tagString.split(":");
+						String tag = tagStringProcessed[0];
+						String value = tagStringProcessed[1];
+						switch(tag) {
+							case "damage":
+								damageInfo.put(item.clone(), Integer.valueOf(value));
+								break;
+							case "forcestack":
+								forceStackInfo.put(item.clone(), Integer.valueOf(value));
+								break;
+						}
+					}
+				}
 		return item;
 	}
 	
@@ -328,48 +326,16 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 				if(item2Meta.getCustomModelData() != item1Meta.getCustomModelData())
 					return false;
 			}
-			//Check persistent storage key/values for this plugin
-			if(item2Meta.getPersistentDataContainer().has(KEY_VALUE, PersistentDataType.DOUBLE) != item1Meta.getPersistentDataContainer().has(KEY_VALUE, PersistentDataType.DOUBLE))
-				return false;
-			if(item2Meta.getPersistentDataContainer().has(KEY_VALUE, PersistentDataType.DOUBLE)) {
-				//You have to EXPLICITLY make these getters into double variables or it breaks EVERYTHING if the values differ. I DON'T KNOW WHY.
-				double val1 = item1Meta.getPersistentDataContainer().get(KEY_VALUE, PersistentDataType.DOUBLE);
-				double val2 = item2Meta.getPersistentDataContainer().get(KEY_VALUE, PersistentDataType.DOUBLE);
-				if(val2 != val1)
-					return false;
-			}
-			if(item2Meta.getPersistentDataContainer().has(KEY_DAMAGE, PersistentDataType.DOUBLE) != item1Meta.getPersistentDataContainer().has(KEY_DAMAGE, PersistentDataType.DOUBLE))
-				return false;
-			if(item2Meta.getPersistentDataContainer().has(KEY_DAMAGE, PersistentDataType.DOUBLE)) {
-				//You have to EXPLICITLY make these getters into double variables or it breaks EVERYTHING if the values differ. I DON'T KNOW WHY.
-				double val1 = item1Meta.getPersistentDataContainer().get(KEY_DAMAGE, PersistentDataType.DOUBLE);
-				double val2 = item2Meta.getPersistentDataContainer().get(KEY_DAMAGE, PersistentDataType.DOUBLE);
-				if(val2 != val1)
-					return false;
-			}
-			if(item2Meta.getPersistentDataContainer().has(KEY_FORCESTACK, PersistentDataType.INTEGER) != item1Meta.getPersistentDataContainer().has(KEY_FORCESTACK, PersistentDataType.INTEGER))
-				return false;
-			if(item2Meta.getPersistentDataContainer().has(KEY_FORCESTACK, PersistentDataType.INTEGER)) {
-				if(item2Meta.getPersistentDataContainer().get(KEY_FORCESTACK, PersistentDataType.INTEGER) != item1Meta.getPersistentDataContainer().get(KEY_FORCESTACK, PersistentDataType.INTEGER))
-					return false;
-			}
 		}
 		return true;
 	}
 	
-	public void giveCustomItem(Player p, Inventory inv, ItemStack item){
+	public void giveCustomItem(Player p, ItemStack item){
 		int amount = item.getAmount();//Start at the item's amount because they're picking it up
-		Inventory bufferInv = Bukkit.createInventory(null, 36);
-		for(int i = 0;i < 36;i++) {
-			bufferInv.setItem(i, item);
-		}
-		bufferInv.setContents(Arrays.copyOfRange(inv.getContents(), 0, 36));
-		List<Integer> removedSlots = new ArrayList<Integer>();
 		for(int i = 0;i < 36;i++){
-			if(bufferInv.getItem(i) != null && isSimilar(bufferInv.getItem(i),item)){
-				amount += bufferInv.getItem(i).getAmount();
-				bufferInv.getItem(i).setAmount(0);
-				removedSlots.add(i);
+			if(p.getInventory().getItem(i) != null && isSimilar(p.getInventory().getItem(i),item)){
+				amount += p.getInventory().getItem(i).getAmount();
+				p.getInventory().getItem(i).setAmount(0);
 			}
 		}
 		int stackSize = getForceStackSize(item);
@@ -377,96 +343,48 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 			if(amount > stackSize){
 				ItemStack temp = item.clone();
 				temp.setAmount(stackSize);
-				if(!removedSlots.isEmpty()) {
-					bufferInv.setItem(removedSlots.get(0), temp);
-					removedSlots.remove(0);
-				} else if(bufferInv.firstEmpty() != -1)
-					bufferInv.setItem(bufferInv.firstEmpty(), temp);
-				else {
-					p.getWorld().dropItem(p.getLocation(), temp);
-				}
+				p.getInventory().setItem(p.getInventory().firstEmpty(), temp);
 				amount -= stackSize;
 			}else{
 				ItemStack temp = item.clone();
 				temp.setAmount(amount);
-				if(!removedSlots.isEmpty()) {
-					bufferInv.setItem(removedSlots.get(0), temp);
-					removedSlots.remove(0);
-				} else if(bufferInv.firstEmpty() != -1)
-					bufferInv.setItem(bufferInv.firstEmpty(), temp);
-				else {
-					p.getWorld().dropItem(p.getLocation(), temp);
-				}
+				p.getInventory().setItem(p.getInventory().firstEmpty(), temp);
 				amount = 0;
 			}
 		}
-		ItemStack[] bufferArray = new ItemStack[inv.getContents().length > bufferInv.getContents().length ? inv.getContents().length : bufferInv.getContents().length];
-		System.arraycopy(inv.getContents(), 0, bufferArray, 0, inv.getContents().length);
-		System.arraycopy(bufferInv.getContents(), 0, bufferArray, 0, bufferInv.getContents().length);
-		inv.setContents(bufferArray);
 	}
-	public void cleanInventoryOfItem(Player p, Inventory inv, ItemStack item) {
-		//Formats an inventory holding items with custom stack sizes
-		int amount = 0;
-		Inventory bufferInv = Bukkit.createInventory(null, 36);
-		for(int i = 0;i < 36;i++) {
-			bufferInv.setItem(i, item);
+	
+	public String getKeyItemString(ItemStack item) {
+		for(String key : enhancedItemInfo.keySet()) {
+			ItemStack keyItem = enhancedItemInfo.get(key);
+			if(isSimilar(item, keyItem))
+				return key;
 		}
-		bufferInv.setContents(Arrays.copyOfRange(inv.getContents(), 0, 36));
-		List<Integer> removedSlots = new ArrayList<Integer>();
-		for(int i = 0;i < 36;i++){
-			if(bufferInv.getItem(i) != null && isSimilar(bufferInv.getItem(i),item)){
-				amount += bufferInv.getItem(i).getAmount();
-				bufferInv.getItem(i).setAmount(0);
-				removedSlots.add(i);
-			}
+		return null;
+	}
+	public ItemStack getKeyItem(ItemStack item) {
+		for(String key : enhancedItemInfo.keySet()) {
+			ItemStack keyItem = enhancedItemInfo.get(key);
+			if(isSimilar(item, keyItem))
+				return keyItem;
 		}
-		int stackSize = getForceStackSize(item);
-		while(amount > 0){
-			if(amount > stackSize){
-				ItemStack temp = item.clone();
-				temp.setAmount(stackSize);
-				if(!removedSlots.isEmpty()) {
-					bufferInv.setItem(removedSlots.get(0), temp);
-					removedSlots.remove(0);
-				} else if(bufferInv.firstEmpty() != -1)
-					bufferInv.setItem(bufferInv.firstEmpty(), temp);
-				else {
-					p.getWorld().dropItem(p.getLocation(), temp);
-				}
-				amount -= stackSize;
-			}else{
-				ItemStack temp = item.clone();
-				temp.setAmount(amount);
-				if(!removedSlots.isEmpty()) {
-					bufferInv.setItem(removedSlots.get(0), temp);
-					removedSlots.remove(0);
-				} else if(bufferInv.firstEmpty() != -1)
-					bufferInv.setItem(bufferInv.firstEmpty(), temp);
-				else {
-					p.getWorld().dropItem(p.getLocation(), temp);
-				}
-				amount = 0;
-			}
-		}
-		ItemStack[] bufferArray = new ItemStack[inv.getContents().length > bufferInv.getContents().length ? inv.getContents().length : bufferInv.getContents().length];
-		System.arraycopy(inv.getContents(), 0, bufferArray, 0, inv.getContents().length);
-		System.arraycopy(bufferInv.getContents(), 0, bufferArray, 0, bufferInv.getContents().length);
-		inv.setContents(bufferArray);
+		return null;
 	}
 	
 	public int getForceStackSize(ItemStack item) {
-		if(!item.hasItemMeta()) return -1;
-		ItemMeta meta = item.getItemMeta();
-		if(!meta.getPersistentDataContainer().has(KEY_FORCESTACK, PersistentDataType.INTEGER)) return -1;
-		return meta.getPersistentDataContainer().get(KEY_FORCESTACK, PersistentDataType.INTEGER);
+		for(ItemStack keyItem : forceStackInfo.keySet()) {
+			if(isSimilar(item, keyItem))
+				return forceStackInfo.get(keyItem);
+		}
+		return -1;
 	}
 	
-	public double getDamageAmount(ItemStack item) {
-		if(!item.hasItemMeta()) return -1;
-		ItemMeta meta = item.getItemMeta();
-		if(!meta.getPersistentDataContainer().has(KEY_DAMAGE, PersistentDataType.DOUBLE)) return -1;
-		return meta.getPersistentDataContainer().get(KEY_DAMAGE, PersistentDataType.DOUBLE);
+	public int getDamageAmount(ItemStack item) {
+		for(ItemStack keyItem : damageInfo.keySet()) {
+			if(isSimilar(item, keyItem))
+				return damageInfo.get(keyItem);
+		}
+		return -1;
 	}
 	
 	@EventHandler
@@ -475,9 +393,9 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 			Player p = (Player) e.getDamager();
 			ItemStack item = p.getInventory().getItemInMainHand();
 			if(p.getInventory().getItemInMainHand() != null && !p.getInventory().getItemInMainHand().getType().equals(Material.AIR)){
-				if(item.hasItemMeta()) {
-					if(item.getItemMeta().getPersistentDataContainer().has(KEY_DAMAGE, PersistentDataType.DOUBLE)) {
-						e.setDamage(item.getItemMeta().getPersistentDataContainer().get(KEY_DAMAGE, PersistentDataType.DOUBLE));
+				for(ItemStack i : damageInfo.keySet()){
+					if(item.isSimilar(i)){
+						e.setDamage(damageInfo.get(i));
 						return;
 					}
 				}
@@ -491,12 +409,18 @@ public class LoadEnhancedItemstackFromConfig implements Listener{
 			return;
 		
 		Player p = (Player) e.getEntity();
-		ItemStack item = e.getItem().getItemStack();
-		if(item == null || !item.hasItemMeta() || !item.getItemMeta().getPersistentDataContainer().has(KEY_FORCESTACK, PersistentDataType.INTEGER))
-			return;
-		
-		e.setCancelled(true);
-		e.getItem().remove();
-		giveCustomItem(p, p.getInventory(), item);
+		ItemStack forceStack = null;
+//		ItemStack keyItem = null;
+		for(ItemStack i : forceStackInfo.keySet()){
+			if(isSimilar(e.getItem().getItemStack(), i)){
+				forceStack = e.getItem().getItemStack();
+//				keyItem = i;
+			}
+		}
+		if(forceStack != null){
+			e.setCancelled(true);
+			e.getItem().remove();
+			giveCustomItem(p, forceStack);
+		}
 	}
 }

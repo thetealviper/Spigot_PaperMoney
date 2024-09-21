@@ -104,13 +104,11 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
 			return;
     	
     	ItemStack item = e.getItemDrop().getItemStack();
+    	NamespacedKey key = new NamespacedKey(this, "value");
     	if((foundDecentHolograms || foundHolographicDisplays)
-    			&& (item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(getLoadEnhancedItemstackFromConfig().KEY_VALUE, PersistentDataType.DOUBLE))){
-    		NamespacedKey key = new NamespacedKey(this, "value");
-            if(item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
-            	double worth = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
-    			hologramPrototype.createHologram(e.getItemDrop(), worth);
-    		}
+    			&& (item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE))){
+        	double worth = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
+			hologramPrototype.createHologram(e.getItemDrop(), worth);
     	}
     }
     
@@ -146,7 +144,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
         	return;
         }
         
-        ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+        ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
         ItemMeta meta = item.getItemMeta();
         NamespacedKey key = new NamespacedKey(this, "value");
         meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, bal);
@@ -216,7 +214,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                             ItemMeta meta = item.getItemMeta();
                             NamespacedKey key = new NamespacedKey(this, "value");
                             meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
@@ -261,7 +259,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                             ItemMeta meta = item.getItemMeta();
                             NamespacedKey key = new NamespacedKey(this, "value");
                             meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
@@ -313,7 +311,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                             ItemMeta meta = item.getItemMeta();
                             NamespacedKey key = new NamespacedKey(this, "value");
                             meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
@@ -362,7 +360,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                             while(args[1].contains(",")){
                                 args[1] = args[1].replace(",", "");
                             }
-                            ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                            ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                             ItemMeta meta = item.getItemMeta();
                             NamespacedKey key = new NamespacedKey(this, "value");
                             meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
@@ -447,7 +445,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                         while(args[1].contains(",")){
                             args[1] = args[1].replace(",", "");
                         }
-                        ItemStack item = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                        ItemStack item = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                         ItemMeta meta = item.getItemMeta();
                         NamespacedKey key = new NamespacedKey(this, "value");
                         meta.getPersistentDataContainer().set(key, PersistentDataType.DOUBLE, roundToSigFigs(Double.valueOf(args[1]), getConfig().getInt("Maximum_Decimal_Places")));
@@ -524,7 +522,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                     if(offItem.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
                     	double offWorth = offItem.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.DOUBLE) * offItem.getAmount();
                     	
-                    	ItemStack newMoneyItem = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+                    	ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
                         ItemMeta meta = newMoneyItem.getItemMeta();
                         NamespacedKey key2 = new NamespacedKey(this, "value");
                         meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, worth+offWorth);
@@ -683,7 +681,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
 							  for(int i = 0;i < inventorySlotsNecessary;i++) {
 								  if(i+1 > args.length) {
 									    //Leftover money
-									    ItemStack newMoneyItem = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+									    ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
 			                            ItemMeta meta = newMoneyItem.getItemMeta();
 			                            NamespacedKey key2 = new NamespacedKey(this, "value");
 			                            meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, worthInHand-totalTyped);
@@ -702,7 +700,7 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
 			                            p.getInventory().addItem(newMoneyItem);
 								  }else {
 									    //Arg specific money
-									    ItemStack newMoneyItem = getLoadEnhancedItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
+									    ItemStack newMoneyItem = getLoadItemstackFromConfig().getItem(getConfig().getConfigurationSection("Item"));
 			                            ItemMeta meta = newMoneyItem.getItemMeta();
 			                            NamespacedKey key2 = new NamespacedKey(this, "value");
 			                            meta.getPersistentDataContainer().set(key2, PersistentDataType.DOUBLE, amountTyped[i]);

@@ -1,7 +1,7 @@
 name: "PaperMoney"
 author: TheTealViper
-version: "1.20.4.a.1"
-api-version: "1.19"
+version: "1.21.0.a.1"
+api-version: "1.21"
 description: "Physical money"
 main: me.TheTealViper.papermoney.PaperMoney
 depend: [Vault]
