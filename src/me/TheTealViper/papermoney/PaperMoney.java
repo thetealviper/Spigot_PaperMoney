@@ -29,6 +29,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
@@ -546,6 +547,21 @@ public class PaperMoney extends UtilityEquippedJavaPlugin implements Listener{
                 }
             }
         }
+    }
+    
+    @EventHandler
+    public void onPrepareCraft(PrepareItemCraftEvent e) { //Add precautions so players can't craft with their papermoney
+    	if (e.getInventory().getResult() == null) {
+    		return;
+    	}
+    	
+    	NamespacedKey key = new NamespacedKey(this, "value");
+    	for (ItemStack item : e.getInventory().getContents()) {
+    		if (item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.DOUBLE)) {
+    			e.getInventory().setResult(null);
+    			return;
+    		}
+    	}
     }
     
     public static String makeColors(String s){

@@ -6,12 +6,15 @@ package me.TheTealViper.papermoney.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -25,6 +28,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
@@ -107,7 +111,7 @@ public class LoadItemstackFromConfig {
 	public LoadItemstackFromConfig(UtilityEquippedJavaPlugin plugin){
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "removal" })
 	public ItemStack getItem(ConfigurationSection sec) {
 		//Null check
 		if(sec == null)
@@ -195,7 +199,24 @@ public class LoadItemstackFromConfig {
 						meta.setUnbreakable(Boolean.valueOf(value));
 						break;
 					case "custommodeldata":
-						meta.setCustomModelData(Integer.valueOf(value));
+						CustomModelDataComponent cmdc = meta.getCustomModelDataComponent();
+						List<String> existingStrings = cmdc.getStrings(); //This List is unmodifiable the way the default implementation is setup, so we must clone it
+						List<String> newCopyStrings = new ArrayList<>();
+						for (String s : existingStrings)
+							newCopyStrings.add(s);
+						newCopyStrings.add(value);
+						cmdc.setStrings(newCopyStrings);
+						List<Float> floats = new ArrayList<>();
+						for (String string : newCopyStrings) {
+							try {
+								float f = Float.parseFloat(string);
+								floats.add(f);
+							} catch (Exception e) {
+								//Don't care neva cared couldn't care
+							}
+						}
+						cmdc.setFloats(floats);
+						meta.setCustomModelDataComponent(cmdc);
 						break;
 					case "enchantglow":
 						meta.setEnchantmentGlintOverride(true);
